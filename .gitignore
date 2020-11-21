@@ -1,0 +1,4 @@
+dist/
+indexed-data/
+node_modules/
+.env
