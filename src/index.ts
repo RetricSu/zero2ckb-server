@@ -35,7 +35,7 @@ const rpc = new RPC("http://127.0.0.1:8114");
 
 async function get_tip() {
   const t = await indexer.tip();
-  console.log(t);
+  //console.log(t);
 }
 
 get_tip();
@@ -47,32 +47,50 @@ const script: Script = {
   args: user.account.lock_arg,
 };
 
+const script2: Script = {
+  code_hash:
+    "0x9bd7e06f3ecf4be0f2fcd2188b23f1b9fcc88e5d4b65a8637b17723bbda3cce8",
+  hash_type: "type",
+  args: '0xb33248c08c55ed636d2f00d065d223ec1a0d333a',
+}
+
 const address = generateAddress(script);
+const address2 = generateAddress(script2);
 
 // Now let's create the actual skeleton, and deposit CKBytes into the skeleton
 let skeleton = TransactionSkeleton({ cellProvider: indexer });
+//console.log(JSON.stringify(skeleton));
 
 // #deposit
 const deposit = async function (amount: bigint, tx_fee: bigint) {
-  skeleton = await dao.deposit(skeleton, address, address, amount);
+  //skeleton = await dao.deposit(skeleton, address, address, amount);
+  skeleton = await secp256k1Blake160.transfer(skeleton, address, address2, amount);
   skeleton = await secp256k1Blake160.payFee(skeleton, address, tx_fee);
+  console.log(JSON.stringify(createTransactionFromSkeleton(skeleton)));
   skeleton = secp256k1Blake160.prepareSigningEntries(skeleton);
   const signingEntries = skeleton.get("signingEntries").toArray();
   console.log(signingEntries);
 
+  const signatures = [
+    "0xb4193b0474c59e89f5c83f479e1589631ce09b7fed52d8e471cb1b64301d0b407e0abaf0160db487f0e365e3320199f2ed15594d9db188829627bc51278d83f301"
+  ]
+  const tx = sealTransaction(skeleton, signatures);
+  console.log(JSON.stringify(tx));
+
   // run ckb-cli to create signature.
   //      ckb-cli util sign-message --output-format json --privkey-path wallet --message 0x3ebdc6fd05c11bb46af7501239baf9cec09a4e08e18d938532ae224b98f6f57e
   // and seal the complete transaction.
+  /*
   const signatures = [
-    "0x762419130bbbfaea5de585e1807c77f03b6452636313ecb805b58b13bb6a5ab57f986403e2541c04475cbdb54aa12d39ab3147a372e29df22cbbf415847c4056",
+    "0x762419130bbbfaea5de585e1807c77f03b6452636313ecb805b58b13bb6a5ab57f986403e2541c04475cbdb54aa12d39ab3147a372e29df22cbbf415847c405600",
   ];
   const tx = sealTransaction(skeleton, signatures);
-
+  
   console.log("######## tx ############");
   console.log(JSON.stringify(tx));
   console.log(createTransactionFromSkeleton(skeleton));
   console.log("####################");
-
+  */
   //const collector = transactionManager.collector({"lock":script});
   //for await (const cell of collector.collect()) {
   //  console.log('uncommit cell: ')
@@ -81,8 +99,8 @@ const deposit = async function (amount: bigint, tx_fee: bigint) {
 
   // now you send transaction via `transactionManager`.
   //const txHash = await transactionManager.send_transaction(tx);
-  const txHash = await rpc.send_transaction(tx);
-  console.log(txHash);
+  //const txHash = await rpc.send_transaction(tx);
+  //console.log(txHash);
 };
 
 deposit(100000000000n, 100000000n);
