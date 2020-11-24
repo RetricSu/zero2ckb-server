@@ -3,6 +3,8 @@
         "mainnet": "ckb1qyqy84gfm9ljvqr69p0njfqullx5zy2hr9kqjynwlg",
         "testnet": "ckt1qyqy84gfm9ljvqr69p0njfqullx5zy2hr9kq0pd3n5",
         "lock_arg": "0x43d509d97f26007a285f39241cffcd411157196c",
-        "lock_hash": "0x3bab60cef4af81a87b0386f29bbf1dd0f6fe71c9fe1d84ca37096a6284d3bdaf"
+        "lock_hash": "0x3bab60cef4af81a87b0386f29bbf1dd0f6fe71c9fe1d84ca37096a6284d3bdaf",
+        "keystore": "/Users/retric/.ckb-cli/keystore/UTC--2020-11-18T08-51-44.521632000Z--43d509d97f26007a285f39241cffcd411157196c",
+        "password": "test"
     }
 }

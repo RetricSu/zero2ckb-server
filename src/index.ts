@@ -71,11 +71,13 @@ const deposit = async function (amount: bigint, tx_fee: bigint) {
   const signingEntries = skeleton.get("signingEntries").toArray();
   console.log(signingEntries);
 
+  
   const signatures = [
-    "0xb4193b0474c59e89f5c83f479e1589631ce09b7fed52d8e471cb1b64301d0b407e0abaf0160db487f0e365e3320199f2ed15594d9db188829627bc51278d83f301"
+    "0x87eed6363977f6999490077f925673c113665fe6673d63ea90d5fa740474af1c249858cd750ddf3dd005e40988039692a9bca3dfffd2cc329cfe9fe86b331c31"
   ]
   const tx = sealTransaction(skeleton, signatures);
   console.log(JSON.stringify(tx));
+  
 
   // run ckb-cli to create signature.
   //      ckb-cli util sign-message --output-format json --privkey-path wallet --message 0x3ebdc6fd05c11bb46af7501239baf9cec09a4e08e18d938532ae224b98f6f57e

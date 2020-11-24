@@ -12,6 +12,7 @@
   "dependencies": {
     "@ckb-lumos/common-scripts": "^0.13.3",
     "@ckb-lumos/config-manager": "^0.13.3",
+    "@ckb-lumos/hd": "^0.13.3",
     "@ckb-lumos/indexer": "^0.13.3",
     "@ckb-lumos/transaction-manager": "^0.13.3",
     "@ckb-lumos/types": "^0.3.0",
