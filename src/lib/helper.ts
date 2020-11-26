@@ -4,6 +4,14 @@ const serializeBigInt = function (i: number) {
     return view.buffer;
 }
 
+const toBigUInt64LE = function (num:number | bigint) {
+    const bnum = BigInt(num);
+    const buf = Buffer.alloc(8);
+    buf.writeBigUInt64LE(bnum);
+    return `0x${buf.toString("hex")}`;
+}
+
 export {
-    serializeBigInt
+    serializeBigInt,
+    toBigUInt64LE
 }

@@ -13,11 +13,12 @@ import {
   sealTransaction,
   TransactionSkeleton,
 } from "@ckb-lumos/helpers";
-import { secp256k1Blake160, dao } from "@ckb-lumos/common-scripts";
+import { MultisigScript, secp256k1Blake160Multisig ,secp256k1Blake160, dao } from "@ckb-lumos/common-scripts";
 import type { Script, Transaction } from "@ckb-lumos/base/index";
 import TransactionManager from "@ckb-lumos/transaction-manager";
 import user from "./user.json";
 import { RPC } from "ckb-js-toolkit";
+import { key, Keystore } from "@ckb-lumos/hd";
 
 if (process.env.LUMOS_CONFIG_FILE) {
   process.env.LUMOS_CONFIG_FILE = path.resolve(process.env.LUMOS_CONFIG_FILE);
@@ -44,7 +45,7 @@ const script: Script = {
   code_hash:
     "0x9bd7e06f3ecf4be0f2fcd2188b23f1b9fcc88e5d4b65a8637b17723bbda3cce8",
   hash_type: "type",
-  args: user.account.lock_arg,
+  args: user.account[0].lock_arg,
 };
 
 const script2: Script = {
@@ -54,26 +55,64 @@ const script2: Script = {
   args: '0xb33248c08c55ed636d2f00d065d223ec1a0d333a',
 }
 
+const script3: Script = {
+  code_hash:
+    "0x9bd7e06f3ecf4be0f2fcd2188b23f1b9fcc88e5d4b65a8637b17723bbda3cce8",
+  hash_type: "type",
+  args: '0x952809177232d0dba355ba5b6f4eaca39cc57746'
+}
+
 const address = generateAddress(script);
 const address2 = generateAddress(script2);
+const address3 = generateAddress(script3);
 
 // Now let's create the actual skeleton, and deposit CKBytes into the skeleton
 let skeleton = TransactionSkeleton({ cellProvider: indexer });
 //console.log(JSON.stringify(skeleton));
 
+
+const test_cell = async function(){
+  const cellCollector = new CellCollector(indexer, {
+    lock: script3,
+  });
+  
+  for await (const cell of cellCollector.collect()) {
+    console.log(cell);
+  }
+};
+
+test_cell();
+
+const get_public_key_hash = function(){
+  return [
+    user.account[0].lock_arg,
+    '0x952809177232d0dba355ba5b6f4eaca39cc57746',
+    '0xb33248c08c55ed636d2f00d065d223ec1a0d333a'
+  ]
+}
+
 // #deposit
 const deposit = async function (amount: bigint, tx_fee: bigint) {
   //skeleton = await dao.deposit(skeleton, address, address, amount);
-  skeleton = await secp256k1Blake160.transfer(skeleton, address, address2, amount);
-  skeleton = await secp256k1Blake160.payFee(skeleton, address, tx_fee);
+  //skeleton = await secp256k1Blake160.transfer(skeleton, address, address2, amount);
+
+  const pubkeyhashes = get_public_key_hash();
+  const frominfo: MultisigScript = {
+    R: 1,
+    M: 2,
+    publicKeyHashes: pubkeyhashes
+  }
+  skeleton = await secp256k1Blake160Multisig.transfer(skeleton, frominfo, address2, amount);
+  //skeleton = await secp256k1Blake160.payFee(skeleton, address, tx_fee);
   console.log(JSON.stringify(createTransactionFromSkeleton(skeleton)));
-  skeleton = secp256k1Blake160.prepareSigningEntries(skeleton);
+  skeleton = secp256k1Blake160Multisig.prepareSigningEntries(skeleton);
   const signingEntries = skeleton.get("signingEntries").toArray();
   console.log(signingEntries);
-
   
   const signatures = [
-    "0x87eed6363977f6999490077f925673c113665fe6673d63ea90d5fa740474af1c249858cd750ddf3dd005e40988039692a9bca3dfffd2cc329cfe9fe86b331c31"
+    "0xf05e152f0dd636c8ae96a4c23dfe1e9b846179d1594e1d8da8e3b32f2e07fbb872f2e92de1e831c509c535548c0d292482444f9d343dafacc8b19cadd7c3687901",
+    "0x8372428f746473b9cb1b9e20337ff48defeca418386fc5c6ad085550701c37c572620f4f29d62895ffc9fe3b4f1810057cd105cbd4330d82b195cf8590f6aace01",
+    "0x6c02ca7e235215bed94907dba1b0841d1f05385cd0fe2a2b6eb392549092ec7107a8c5c5abbf35e52fe851f1998eb475e01efa9925d98b1c91e2ca10e265959201"
   ]
   const tx = sealTransaction(skeleton, signatures);
   console.log(JSON.stringify(tx));
@@ -105,7 +144,7 @@ const deposit = async function (amount: bigint, tx_fee: bigint) {
   //console.log(txHash);
 };
 
-deposit(100000000000n, 100000000n);
+deposit(99900000000n, 100000000n);
 
 async function test() {
   const t: Transaction = {

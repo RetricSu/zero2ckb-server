@@ -16,9 +16,9 @@
  * 
  * ## pre-reqiured
  * 
- * - generate a brand new wallet account using the command tool ckb-cli
+ * - generate a couple brand new wallet accounts using the command tool ckb-cli
  * - run a CKB devnet on local.
- * - pass the wallet info to /src/user.json. (including password, so !!!do NOT use this wallet in production!!!)
+ * - pass the wallets info to /src/user.json. (including password, so !!!do NOT use this wallet in production!!!)
  * 
  * ## useage example 
  *      
@@ -54,7 +54,7 @@ import {
 } from "@ckb-lumos/base";
 import { key, Keystore } from "@ckb-lumos/hd";
 import * as user from "../user.json";
-import { serializeBigInt } from "./helper";
+import { serializeBigInt, toBigUInt64LE } from "./helper";
 
 const { CKBHasher, ckbHash } = utils;
 
@@ -77,6 +77,14 @@ export interface InputsGroup {
   child: number[];
 }
 
+export interface MultisigScript {
+  S: number;
+  R: number;
+  M: number;
+  N: number;
+  publicKeyHashes: string[];
+}
+
 export class Builder {
   private hasher;
 
@@ -87,13 +95,19 @@ export class Builder {
   sign_P2PKH(
     raw_tx: RawTransaction,
     witnessArgs: WitnessArgs[],
-    inputCells: Cell[]
+    inputCells: Cell[],
+    account_id = 0
   ): Transaction {
     const messages: Message[] = [];
     const signedWitness: HexString[] = [];
+
+    // 0. group the input with same lock script for witness
     const input_groups = this.groupInputs(inputCells);
+
     for (let i = 0; i < input_groups.length; i++) {
       const group_index = input_groups[i].child[0];
+
+      //reserve dummy lock for the first witness
       const dummy_lock = "0x" + "0".repeat(130);
       let witness_args = witnessArgs[group_index];
       witness_args.lock = dummy_lock;
@@ -138,7 +152,7 @@ export class Builder {
       });
 
       // 4. sign tx
-      const signature = this.signMessage(sig_hash);
+      const signature = this.signMessage(sig_hash, account_id = account_id);
 
       // 5. put the signature back to the first witness of the group.
       witness_args.lock = signature;
@@ -148,10 +162,142 @@ export class Builder {
     return { ...raw_tx, ...{ witnesses: signedWitness } };
   }
 
-  sign_Multisig(){
+  sign_Multisig(
+    raw_tx: RawTransaction,
+    multisigScript: MultisigScript,
+    witnessArgs: WitnessArgs[],
+    inputCells: Cell[],
+    account_ids: number[]
+  ){
     /** to do */
+    const messages: Message[] = [];
+    const signedWitness: HexString[] = [];
+
+    const M = multisigScript.M;
+
+    // 0. group the input with same lock script for witness
+    const input_groups = this.groupInputs(inputCells);
+
+    for (let i = 0; i < input_groups.length; i++) {
+      const group_index = input_groups[i].child[0];
+
+      const serializedMultisigScript = this.serializeMultisigScript(multisigScript);
+      //const multisigScriptHash = this.generateMultisigScriptHash(serializedMultisigScript);
+      const dummy_lock = serializedMultisigScript + "0".repeat(130 * M);
+      let witness_args = witnessArgs[group_index];
+      witness_args.lock = dummy_lock;
+
+      this.hasher = new CKBHasher();
+
+      // 1. hash the txHash
+      const tx_hash = this.generateTxHash(raw_tx);
+      this.hasher.update(tx_hash);
+
+      // 2. hash the witness in groups order.
+      // - 2.1 hash the first witness in group
+      const firstWitness = new Reader(this.serializeWitness(witness_args));
+      this.hasher.update(serializeBigInt(firstWitness.length()));
+      this.hasher.update(firstWitness);
+      // - 2.2 hash the rest of witness in the same group
+      for (let j = 1; j < input_groups[i].child.length; j++) {
+        const witness_index = input_groups[i].child[j];
+        let witness_args_in_group = witnessArgs[witness_index];
+        const witeness_in_group = new Reader(
+          this.serializeWitness(witness_args_in_group)
+        );
+        this.hasher.update(serializeBigInt(witeness_in_group.length()));
+        this.hasher.update(witeness_in_group);
+      }
+      // - 2.3 hash the witness which do not in any input group
+      for (let k = raw_tx.inputs.length; k < witnessArgs.length; k++) {
+        let witness_args_alone = witnessArgs[k];
+        const witeness_alone = new Reader(
+          this.serializeWitness(witness_args_alone)
+        );
+        this.hasher.update(serializeBigInt(witeness_alone.length()));
+        this.hasher.update(witeness_alone);
+      }
+
+      // 3. generate the sign-message, ready to be signed.
+      const sig_hash = this.hasher.digestHex();
+      messages.push({
+        index: i,
+        message: sig_hash, // hex string
+        lock: inputCells[i].lock,
+      });
+      console.log(sig_hash);
+      this.hasher = new CKBHasher();
+
+      // 4. sign tx with each account
+      for(let l=0;l<account_ids.length;l++){
+        const signature = this.signMessage(sig_hash, account_ids[l]);
+
+        // 5. put the signature back to the first witness of the group.
+        const sig_offset = serializedMultisigScript.length + l * 130;
+        witness_args.lock = witness_args.lock?.substring(0, sig_offset) + signature.slice(2) + witness_args.lock?.substring(sig_offset+130);
+      }
+
+      signedWitness[group_index] = this.serializeWitness(witness_args);
+    }
+    // 6. return the complete tx which can be uploaded on-chain directly through rpc.
+    return { ...raw_tx, ...{ witnesses: signedWitness } };
   }
 
+  sign_CustomTypeScript(
+    raw_tx: RawTransaction
+  ){
+    
+  }
+
+  deploy_smart_contract(){
+
+  }
+
+  deploy_upgradable_contract(){
+
+  }
+
+
+  signWitnessArgs(){
+
+  }
+
+  // the multisigArgs acuttally is the lock_arg of the multisig address.
+  // the method to generate multisigArgs is quite simple: 
+  //    1. serialize the multisigScript, and get first 20th-blake2b-hash
+  //    2. if since is not null, just append it after.
+  generateMultisigArgs(serializedMultisigScript: string, since: string): string{
+    let sinceLE = "0x";
+    if (since != null) {
+        sinceLE = toBigUInt64LE(BigInt(since));
+    }
+    return (new CKBHasher().update(serializedMultisigScript).digestHex().slice(0, 42) +
+        sinceLE.slice(2));
+  }
+
+  serializeMultisigScript(multisigScript: MultisigScript): string{
+    if (multisigScript.S !== 0)throw new Error("S in MultisigScript must be 0 now!");
+
+    if (multisigScript.R < 0 || multisigScript.R > 255) {
+      throw new Error("`R` should be less than 256!");
+    }
+    if (multisigScript.M < 0 || multisigScript.M > 255) {
+        throw new Error("`M` should be less than 256!");
+    }
+    if (multisigScript.N < 0 || multisigScript.N > 255) {
+      throw new Error("`M` should be less than 256!");
+    }
+    if (multisigScript.publicKeyHashes.length !== multisigScript.N) {
+      throw new Error("`N` should match the length of publickeyhashes!");
+    }
+    // TODO: validate publicKeyHashes
+    return ("0x00" +
+        ("00" + multisigScript.R.toString(16)).slice(-2) +
+        ("00" + multisigScript.M.toString(16)).slice(-2) +
+        ("00" + multisigScript.N.toString(16)).slice(-2) +
+        multisigScript.publicKeyHashes.map((h) => h.slice(2)).join(""));
+  }
+  
   groupInputs(inputCells: Cell[]): InputsGroup[] {
     var groups: InputsGroup[] = [];
     inputCells.forEach((cell, index) => {
@@ -187,11 +333,11 @@ export class Builder {
     ).serializeJson();
   }
 
-  signMessage(msg: HexString): HexString {
+  signMessage(msg: HexString, account_id:number=0): HexString {
     //const keystore = Keystore.load(user.account.keystore);
-    const file = path.resolve(user.account.keystore);
+    const file = path.resolve(user.account[account_id].keystore);
     const keystore = Keystore.load(file);
-    const private_key = keystore.extendedPrivateKey(user.account.password)
+    const private_key = keystore.extendedPrivateKey(user.account[account_id].password)
       .privateKey;
     return key.signRecoverable(msg, private_key);
   }
@@ -289,3 +435,4 @@ export class Builder {
     return tx;
   }
 }
+
