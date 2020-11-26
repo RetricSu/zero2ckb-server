@@ -1,4 +1,9 @@
 {
+    "BURNER_LOCK": {
+        "args": "0x",
+        "code_hash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+        "hash_type": "data"
+    },
     "EMPTY_RAW_TRANSACTION": {
         "version": "",
         "cell_deps": [],
@@ -15,5 +20,6 @@
         "outputs": [],
         "outputs_data": [],
         "witnesses": []
-    }
+    },
+    "TEST_CONTRACT": "../script-examples/carrot"
 }

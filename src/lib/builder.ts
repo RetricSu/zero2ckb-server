@@ -41,6 +41,9 @@
         console.log(txhash);
  */
 import path from "path";
+import fs from "fs";
+import * as Config from "../dev_cofig.json";
+import * as CONST from "../const.json";
 import { RPC, validators, normalizers, transformers, Reader } from "ckb-js-toolkit";
 import {
   core,
@@ -55,6 +58,7 @@ import {
 import { key, Keystore } from "@ckb-lumos/hd";
 import * as user from "../user.json";
 import { serializeBigInt, toBigUInt64LE } from "./helper";
+
 
 const { CKBHasher, ckbHash } = utils;
 
@@ -84,6 +88,8 @@ export interface MultisigScript {
   N: number;
   publicKeyHashes: string[];
 }
+
+export type ContractMode = "normal" | "test" | "upgradable";
 
 export class Builder {
   private hasher;
@@ -244,22 +250,81 @@ export class Builder {
   }
 
   sign_CustomTypeScript(
-    raw_tx: RawTransaction
+    raw_tx: RawTransaction,
+    witnessArgs: WitnessArgs[]
   ){
     
   }
 
-  deploy_smart_contract(){
+  deploy_contract(
+    compiled_code: HexString, // the smart contract code compiled into hex string
+    length: number, // how much the output cell which contains the actual contract code needs
+    raw_tx_without_output: RawTransaction,
+    input_cells: Cell[],
+    mode: ContractMode,
+    account_id = 0
+  ){
+    if(mode === "upgradable")
+      return this.deploy_upgradable_contract(compiled_code, length, raw_tx_without_output, input_cells, account_id);
+
+    // first let's complete the raw transaction with outputs and output-data
+    if(mode === "normal"){ 
+      // contract is immutable in normal mode
+      raw_tx_without_output.outputs[0] = {
+        capacity: '0x' + length.toString(16),
+        lock: {
+          code_hash: CONST.BURNER_LOCK.code_hash,
+          args: CONST.BURNER_LOCK.args,
+          hash_type: CONST.BURNER_LOCK.hash_type === "type"?"type":"data"
+        }
+      };
+      raw_tx_without_output.outputs_data[0] = compiled_code;
+
+    }else{
+      // in test mode, the contract cell can be consumed like normal cell by owner
+      raw_tx_without_output.outputs[0] = {
+        capacity: '0x' + length.toString(16),
+        lock: {
+          code_hash: Config.SCRIPTS.SECP256K1_BLAKE160.CODE_HASH,
+          args: user.account[account_id].lock_arg,
+          hash_type: Config.SCRIPTS.SECP256K1_BLAKE160.HASH_TYPE == "type"?"type":"data"
+        }
+      };
+      raw_tx_without_output.outputs_data[0] = compiled_code;
+
+    }
+
+    // now we can sign this tx and ready to send it through RPC.
+    const witnessArgs: WitnessArgs[] = [{
+      lock: '0x'
+    }]
+    const tx = this.sign_P2PKH(raw_tx_without_output, witnessArgs, input_cells, account_id = account_id);
+    return tx;
+  }
+
+  deploy_upgradable_contract(
+    compiled_code: HexString, // the smart contract code compiled into hex string
+    length: number, // how much the output cell which contains the actual contract code needs
+    raw_tx_without_output: RawTransaction,
+    input_cells: Cell[],
+    account_id = 0
+  ){
 
   }
 
-  deploy_upgradable_contract(){
-
+  generateCodeHashFromContractCell(output_cell: Cell){
+    const hasher = new CKBHasher();
+    hasher.update(core.SerializeCellOutput(normalizers.NormalizeCellOutput(output_cell)));
+    return hasher.digestHex().slice(0, 42);
   }
 
-
-  signWitnessArgs(){
-
+  generateTestContractCode(){
+    const file = path.resolve(CONST.TEST_CONTRACT);
+    const source_code = fs.readFileSync(file);
+    return {
+      length: source_code.byteLength,
+      data: source_code.toString('hex')
+    };
   }
 
   // the multisigArgs acuttally is the lock_arg of the multisig address.
