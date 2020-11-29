@@ -42,12 +42,17 @@
  */
 import path from "path";
 import fs from "fs";
-import * as Config from "../dev_cofig.json";
-import * as CONST from "../const.json";
+import * as Config from "../config/dev_cofig.json";
+import * as Const from "../config/const.json";
+import * as User from "../config/user.json";
 import { RPC, validators, normalizers, transformers, Reader } from "ckb-js-toolkit";
 import {
   core,
   utils,
+  Input,
+  Output,
+  CellDep,
+  Hash,
   Script,
   WitnessArgs,
   OutPoint,
@@ -56,9 +61,7 @@ import {
   RawTransaction,
 } from "@ckb-lumos/base";
 import { key, Keystore } from "@ckb-lumos/hd";
-import * as user from "../user.json";
 import { serializeBigInt, toBigUInt64LE } from "./helper";
-
 
 const { CKBHasher, ckbHash } = utils;
 
@@ -90,7 +93,16 @@ export interface MultisigScript {
 }
 
 export type ContractMode = "normal" | "test" | "upgradable";
+export type TypeIDConfig = {
+  code_hash: HexString,
+  hash_type: "type"
+}
 
+
+// todo
+// [ ]: improve the capacity caculation, repalce the current hard-code method
+// [ ]: improve the tx-fee estimate, repalce the current hard-code method
+// [ ]: extract the same interface and type to a single file for better code structure and code sharing
 export class Builder {
   private hasher;
 
@@ -262,20 +274,21 @@ export class Builder {
     raw_tx_without_output: RawTransaction,
     input_cells: Cell[],
     mode: ContractMode,
-    account_id = 0
-  ){
+    account_id = 0,
+    tx_fee = 1 // uint: ckb
+  ): Transaction{
     if(mode === "upgradable")
-      return this.deploy_upgradable_contract(compiled_code, length, raw_tx_without_output, input_cells, account_id);
+      return this.deploy_upgradable_contract(compiled_code, length, raw_tx_without_output, input_cells, account_id, tx_fee);
 
     // first let's complete the raw transaction with outputs and output-data
     if(mode === "normal"){ 
       // contract is immutable in normal mode
       raw_tx_without_output.outputs[0] = {
-        capacity: '0x' + length.toString(16),
+        capacity: '0x' + (BigInt(length + 100) * 100000000n).toString(16),
         lock: {
-          code_hash: CONST.BURNER_LOCK.code_hash,
-          args: CONST.BURNER_LOCK.args,
-          hash_type: CONST.BURNER_LOCK.hash_type === "type"?"type":"data"
+          code_hash: Const.BURNER_LOCK.code_hash,
+          args: Const.BURNER_LOCK.args,
+          hash_type: Const.BURNER_LOCK.hash_type === "type"?"type":"data"
         }
       };
       raw_tx_without_output.outputs_data[0] = compiled_code;
@@ -283,15 +296,29 @@ export class Builder {
     }else{
       // in test mode, the contract cell can be consumed like normal cell by owner
       raw_tx_without_output.outputs[0] = {
-        capacity: '0x' + length.toString(16),
+        capacity: '0x' + (BigInt(length + 100) * 100000000n).toString(16),
         lock: {
           code_hash: Config.SCRIPTS.SECP256K1_BLAKE160.CODE_HASH,
-          args: user.account[account_id].lock_arg,
+          args: User.account[account_id].lock_arg,
           hash_type: Config.SCRIPTS.SECP256K1_BLAKE160.HASH_TYPE == "type"?"type":"data"
         }
       };
       raw_tx_without_output.outputs_data[0] = compiled_code;
 
+    }
+
+    // after construct the contract cell, let's give the rest money back to owner
+    const remain_balance = BigInt(input_cells[0].capacity) - BigInt(raw_tx_without_output.outputs[0].capacity) - BigInt(tx_fee) * 100000000n;
+    if( remain_balance > 0 ){
+      raw_tx_without_output.outputs[1] = {
+        capacity: '0x' + remain_balance.toString(16),
+        lock: {
+          code_hash: Config.SCRIPTS.SECP256K1_BLAKE160.CODE_HASH,
+          args: User.account[account_id].lock_arg,
+          hash_type: Config.SCRIPTS.SECP256K1_BLAKE160.HASH_TYPE == "type"?"type":"data"
+        }
+      }
+      raw_tx_without_output.outputs_data[1] = '0x';
     }
 
     // now we can sign this tx and ready to send it through RPC.
@@ -302,29 +329,162 @@ export class Builder {
     return tx;
   }
 
+  /**
+   * use type id to deploy a unique type hash and upgradable contract
+   * code => cell_1, use cell_1's type script as ref.
+   * and then type_id contract: cell1 -> cell2
+   * cell => { }
+   * cell => type script hash => data: code
+   * owner: use type script
+   * @param compiled_code 
+   * @param length 
+   * @param raw_tx_without_output 
+   * @param input_cells 
+   * @param account_id 
+   */
   deploy_upgradable_contract(
     compiled_code: HexString, // the smart contract code compiled into hex string
     length: number, // how much the output cell which contains the actual contract code needs
     raw_tx_without_output: RawTransaction,
     input_cells: Cell[],
-    account_id = 0
-  ){
-
-  }
-
-  generateCodeHashFromContractCell(output_cell: Cell){
-    const hasher = new CKBHasher();
-    hasher.update(core.SerializeCellOutput(normalizers.NormalizeCellOutput(output_cell)));
-    return hasher.digestHex().slice(0, 42);
-  }
-
-  generateTestContractCode(){
-    const file = path.resolve(CONST.TEST_CONTRACT);
-    const source_code = fs.readFileSync(file);
-    return {
-      length: source_code.byteLength,
-      data: source_code.toString('hex')
+    account_id = 0,
+    tx_fee = 1 // uint: ckb
+  ): Transaction{
+    // todo
+    const type_id = this.generateTypeIDContractCode();
+    const first_input_outpoint: OutPoint = raw_tx_without_output.inputs[0].previous_output;
+    raw_tx_without_output.outputs[0] = {
+      capacity: '0x' + (BigInt(length + 100) * 100000000n).toString(16),
+      lock: {
+        code_hash: Config.SCRIPTS.SECP256K1_BLAKE160.CODE_HASH,
+        args: User.account[account_id].lock_arg,
+        hash_type: Config.SCRIPTS.SECP256K1_BLAKE160.HASH_TYPE === "type"?"type":"data"
+      },
+      type: {
+        code_hash: this.generateCodeHash(type_id.code),
+        args: this.generateTypeIDArgsHash(first_input_outpoint),
+        hash_type: 'data'
+      }
     };
+    raw_tx_without_output.outputs_data[0] = compiled_code;
+
+    // after construct the contract cell, let's give the rest money back to owner
+    const remain_balance = BigInt(input_cells[0].capacity) - BigInt(raw_tx_without_output.outputs[0].capacity) - BigInt(tx_fee) * 100000000n;
+    if( remain_balance > 0 ){
+      raw_tx_without_output.outputs[1] = {
+        capacity: '0x' + remain_balance.toString(16),
+        lock: {
+          code_hash: Config.SCRIPTS.SECP256K1_BLAKE160.CODE_HASH,
+          args: User.account[account_id].lock_arg,
+          hash_type: Config.SCRIPTS.SECP256K1_BLAKE160.HASH_TYPE == "type"?"type":"data"
+        }
+      }
+      raw_tx_without_output.outputs_data[1] = '0x';
+    }
+
+    // now we can sign this tx and ready to send it through RPC.
+    const witnessArgs: WitnessArgs[] = [{
+      lock: '0x'
+    }]
+    const tx = this.sign_P2PKH(raw_tx_without_output, witnessArgs, input_cells, account_id = account_id);
+    return tx;
+  }
+
+  deployTypeID(
+    raw_tx_without_output: RawTransaction,
+    input_cells: Cell[],
+    account_id = 0
+  ): Transaction{
+    const {length, code} = this.generateTypeIDContractCode();
+    return this.deploy_contract(code, length, raw_tx_without_output, input_cells, "normal", account_id);
+  }
+
+  generateRawTxTemplate(
+    cell_deps: CellDep[] = [],
+    header_deps: Hash[] = [],
+    inputs: Input[] = [],
+    outputs: Output[] = [],
+    outputs_data: HexString[] = [],
+    version: HexString = Const.TX_VERSION
+  ){
+    let raw_tx: RawTransaction = {
+      cell_deps: cell_deps,
+      header_deps: header_deps,
+      inputs: inputs,
+      outputs: outputs,
+      outputs_data: outputs_data,
+      version: version
+    }
+    return raw_tx;
+  }
+
+  generateTxTemplate(
+    cell_deps: CellDep[] = [],
+    header_deps: Hash[] = [],
+    inputs: Input[] = [],
+    outputs: Output[] = [],
+    outputs_data: HexString[] = [],
+    witnesses: HexString[] = [],
+    version: HexString = Const.TX_VERSION
+  ){
+    let tx: Transaction = {
+      cell_deps: cell_deps,
+      header_deps: header_deps,
+      inputs: inputs,
+      outputs: outputs,
+      outputs_data: outputs_data,
+      witnesses: witnesses,
+      version: version
+    }
+    return tx;
+  }
+
+  generateCodeHash(code: HexString | Cell){
+    const hasher = new CKBHasher();
+    if(typeof code === 'string'){
+      hasher.update(code);
+      return hasher.digestHex();
+    }else if(typeof code === 'object'){
+      hasher.update(code.data)
+      return hasher.digestHex();
+    }else{
+      throw new Error("unsuported type of code.");
+    }
+  }
+
+  generateTestContractCode(){ // carrot example
+    const file = path.resolve(Const.TEST_CONTRACT);
+    const complied_code = fs.readFileSync(file);
+    return {
+      length: complied_code.byteLength,
+      code: '0x' + complied_code.toString('hex')
+    };
+  }
+
+  generateTypeIDContractCode(){
+    const file = path.resolve(Const.TYPE_ID_CONTRACT);
+    const complied_code = fs.readFileSync(file);
+    return {
+      length: complied_code.byteLength,
+      code: '0x' + complied_code.toString('hex')
+    };
+  }
+
+  // when a cell ref the TypeID script for the first time,
+  // TypeID will consider this a init operation
+  // and try to contrcut the first unique id
+  // by hashing the first input as a unique key
+  // to place in the args data filed in output cell's type script
+  // this function helps to generate this args.
+  // see: https://github.com/nervosnetwork/ckb/blob/develop/script/src/type_id.rs#L46-L71
+  generateTypeIDArgsHash(
+    first_input_outpoint: OutPoint
+  ): HexString{
+    const f_op = core.SerializeOutPoint(normalizers.NormalizeOutPoint(first_input_outpoint));
+    const hasher = new CKBHasher();
+    hasher.update(f_op);
+    // todo: complete the bug-free args (add first output index as second arg)
+    return hasher.digestHex();
   }
 
   // the multisigArgs acuttally is the lock_arg of the multisig address.
@@ -400,9 +560,9 @@ export class Builder {
 
   signMessage(msg: HexString, account_id:number=0): HexString {
     //const keystore = Keystore.load(user.account.keystore);
-    const file = path.resolve(user.account[account_id].keystore);
+    const file = path.resolve(User.account[account_id].keystore);
     const keystore = Keystore.load(file);
-    const private_key = keystore.extendedPrivateKey(user.account[account_id].password)
+    const private_key = keystore.extendedPrivateKey(User.account[account_id].password)
       .privateKey;
     return key.signRecoverable(msg, private_key);
   }

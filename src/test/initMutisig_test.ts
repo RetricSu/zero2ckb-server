@@ -1,5 +1,5 @@
-import { MultisigScript, Cell, Builder } from "./builder";
-import * as Config from "../dev_cofig.json";
+import { MultisigScript, Cell, Builder } from "../lib/builder";
+import * as Config from "../config/dev_cofig.json";
 import {
   core,
   utils,

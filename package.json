@@ -1,12 +1,15 @@
 {
-  "name": "nervos-dao",
+  "name": "learn-ckb-by-hand",
+  "description": "a helper file in browser to learn ckb purely by hand.",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "dev": "nodemon --watch 'src/*.ts' --exec 'ts-node' src/*.ts",
     "build": "tsc",
     "start": "node dist/index.js",
-    "index": "tsc && node dist/index.js"
+    "index": "tsc && node dist/index.js",
+    "server": "tsc && node dist/test/server.js"
   },
   "license": "MIT",
   "dependencies": {
@@ -17,10 +20,14 @@
     "@ckb-lumos/transaction-manager": "^0.13.3",
     "@ckb-lumos/types": "^0.3.0",
     "@nervosnetwork/ckb-sdk-core": "^0.37.0",
+    "@types/cors": "^2.8.8",
+    "@types/express": "^4.17.9",
     "@types/node": "^14.14.8",
     "@types/secp256k1": "^4.0.1",
     "ckb-js-toolkit": "^0.9.2",
+    "cors": "^2.8.5",
     "dotenv": "^8.2.0",
+    "express": "^4.17.1",
     "nodemon": "^2.0.6",
     "ts-node": "^9.0.0",
     "typescript": "^4.0.5"
