@@ -23,6 +23,7 @@
         "witnesses": []
     },
     "TEST_CONTRACT": "../NERVOS-DAO/src/script-examples/carrot",
+    "TEST_UPGRADABLE_CONTRACT": "../NERVOS-DAO/src/script-examples/parrot",
     "TYPE_ID_CONTRACT": "../NERVOS-DAO/src/script-examples/type_id",
     "RPC_URL": "http://127.0.0.1:8114",
     "DB_URL": "/tmp/indexed-data",

@@ -10,7 +10,7 @@ int main() {
   if (ret != CKB_INDEX_OUT_OF_BOUND) {
     return -1;  /* 1 */
   }
-
+  
   len = 0;
   ret = ckb_load_cell(NULL, &len, 0, 0, CKB_SOURCE_GROUP_INPUT);
   if (ret != CKB_INDEX_OUT_OF_BOUND) {

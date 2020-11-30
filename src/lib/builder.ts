@@ -61,7 +61,7 @@ import {
   RawTransaction,
 } from "@ckb-lumos/base";
 import { key, Keystore } from "@ckb-lumos/hd";
-import { serializeBigInt, toBigUInt64LE } from "./helper";
+import { serializeBigInt, toBigUInt64LE, buf2hex } from "./helper";
 
 const { CKBHasher, ckbHash } = utils;
 
@@ -331,11 +331,16 @@ export class Builder {
 
   /**
    * use type id to deploy a unique type hash and upgradable contract
-   * code => cell_1, use cell_1's type script as ref.
-   * and then type_id contract: cell1 -> cell2
-   * cell => { }
-   * cell => type script hash => data: code
-   * owner: use type script
+   * only support one type-id each time(so the first output index is set to 0)
+   * 
+   * upgradable-contract workflow:
+   * 1. find the dep cell with type-id code in data filed
+   * 2. construct the output cell with the following:
+   *    2.1 ref the type-id cell as dep cell in tx
+   *    2.2 set type script of output-cell to match the type-id cell
+   *    2.3 put your contract code in output-cell's data filed.
+   * 3. sign tx and send.
+   * 
    * @param compiled_code 
    * @param length 
    * @param raw_tx_without_output 
@@ -353,8 +358,9 @@ export class Builder {
     // todo
     const type_id = this.generateTypeIDContractCode();
     const first_input_outpoint: OutPoint = raw_tx_without_output.inputs[0].previous_output;
+    const first_output_index: number = 0;
     raw_tx_without_output.outputs[0] = {
-      capacity: '0x' + (BigInt(length + 100) * 100000000n).toString(16),
+      capacity: '0x' + (BigInt(length + 300) * 100000000n).toString(16),
       lock: {
         code_hash: Config.SCRIPTS.SECP256K1_BLAKE160.CODE_HASH,
         args: User.account[account_id].lock_arg,
@@ -362,10 +368,12 @@ export class Builder {
       },
       type: {
         code_hash: this.generateCodeHash(type_id.code),
-        args: this.generateTypeIDArgsHash(first_input_outpoint),
+        args: this.generateTypeIDArgs(raw_tx_without_output.inputs[0]),//this.generateTypeIDArgsHash(first_input_outpoint, first_output_index),
         hash_type: 'data'
       }
     };
+    console.log('typeid args:')
+    console.log(this.generateTypeIDArgsHash(first_input_outpoint, first_output_index));
     raw_tx_without_output.outputs_data[0] = compiled_code;
 
     // after construct the contract cell, let's give the rest money back to owner
@@ -461,6 +469,15 @@ export class Builder {
     };
   }
 
+  generateTestUpgradableContractCode(){
+    const file = path.resolve(Const.TEST_UPGRADABLE_CONTRACT);
+    const complied_code = fs.readFileSync(file);
+    return {
+      length: complied_code.byteLength,
+      code: '0x' + complied_code.toString('hex')
+    };
+  }
+
   generateTypeIDContractCode(){
     const file = path.resolve(Const.TYPE_ID_CONTRACT);
     const complied_code = fs.readFileSync(file);
@@ -471,20 +488,32 @@ export class Builder {
   }
 
   // when a cell ref the TypeID script for the first time,
-  // TypeID will consider this a init operation
-  // and try to contrcut the first unique id
-  // by hashing the first input as a unique key
-  // to place in the args data filed in output cell's type script
-  // this function helps to generate this args.
+  // TypeID will consider it a init operation
+  // and try to construct the first unique id
+  // 1. by hashing the first input as a unique key
+  //    and place it in the args data filed in output cell's type script.
+  // 2. besides, we will additionally hash a second args(output-index) 
+  //    to enable dev to generate multiple differernt typeID in one transaction.
+  // this function helps to generate such two args.
   // see: https://github.com/nervosnetwork/ckb/blob/develop/script/src/type_id.rs#L46-L71
   generateTypeIDArgsHash(
-    first_input_outpoint: OutPoint
+    first_input_outpoint: OutPoint,
+    first_output_index: number
   ): HexString{
     const f_op = core.SerializeOutPoint(normalizers.NormalizeOutPoint(first_input_outpoint));
     const hasher = new CKBHasher();
     hasher.update(f_op);
-    // todo: complete the bug-free args (add first output index as second arg)
+    hasher.update(toBigUInt64LE(first_output_index));
     return hasher.digestHex();
+  }
+
+  // in demo, we try encode the whole input as args rather than its hash 
+  // for simplicity and convience to better teach the type-id idea to newbee.
+  // but in production, we really use generateTypeIDArgsHash() method.
+  generateTypeIDArgs(
+    first_input: Input,
+  ): HexString{
+    return '0x'+buf2hex(core.SerializeCellInput(normalizers.NormalizeCellInput(first_input)));
   }
 
   // the multisigArgs acuttally is the lock_arg of the multisig address.

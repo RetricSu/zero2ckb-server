@@ -11,7 +11,12 @@ const toBigUInt64LE = function (num:number | bigint) {
     return `0x${buf.toString("hex")}`;
 }
 
+const buf2hex = function (buffer: ArrayBuffer) { // buffer is an ArrayBuffer
+    return Array.prototype.map.call(new Uint8Array(buffer), x => ('00' + x.toString(16)).slice(-2)).join('');
+}
+
 export {
     serializeBigInt,
-    toBigUInt64LE
+    toBigUInt64LE,
+    buf2hex
 }
