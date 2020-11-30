@@ -1,8 +1,10 @@
 import { Indexer, CellCollector, TransactionCollector } from "@ckb-lumos/indexer";
 import type { 
     QueryOptions
- } from "@ckb-lumos/base";
+} from "@ckb-lumos/base";
+import * as User from "../config/user.json";
 import * as Const from "../config/const.json";
+import * as Config from "../config/dev_cofig.json";
 
 export class Chain {
     private indexer;
@@ -39,10 +41,22 @@ export class Chain {
     }
 
     queryCellMetaData(){
-
+        
     }
 
     queryScript(){
 
+    }
+
+    getChainConfig(){
+        return Config;
+    }
+
+    getWallets(){
+        return User.account;
+    }
+
+    getWalletById(id: number){
+        return User.account[id];
     }
 }

@@ -1,6 +1,15 @@
 import type { 
-    QueryOptions
- } from "@ckb-lumos/base";
+    QueryOptions,
+    WitnessArgs,
+    Transaction,
+    RawTransaction
+} from "@ckb-lumos/base";
+import type{
+    Cell,
+    MultisigScript,
+    ContractMode
+} from "../lib/builder";
+import { Builder } from "../lib/builder";
 import { Chain } from "../lib/chain";
 import * as Config from "../config/const.json";
 import express from "express";
@@ -16,6 +25,7 @@ const app = express();
 app.use(cors(corsOptions));
 
 const chain = new Chain();
+const builder = new Builder();
 
 app.get( "/", ( req, res ) => {
     res.json( "hello, CKB learner!" );
@@ -34,23 +44,71 @@ app.get("/get_tx", async ( req, res ) => {
 });
 
 app.get("/send_tx", async ( req, res ) => {
-
+    var tx: Transaction = JSON.parse(req.params.tx);
+    const tx_hash = await builder.send_tx(tx);
+    res.json(tx_hash);
 });
 
 app.get("/sign_p2pkh", async ( req, res ) => {
-
+    const raw_tx: RawTransaction = JSON.parse(req.params.raw_tx);
+    const witnessesArgs: WitnessArgs[] = JSON.parse(req.params.witnessesArgs);
+    const input_cells: Cell[] = JSON.parse(req.params.input_cells);
+    try {
+        const tx_hash = builder.sign_P2PKH(raw_tx, witnessesArgs, input_cells);
+        res.json({status:'ok', data: tx_hash});
+    } catch (error) {
+        res.json({status:'failed', data: error});
+    }
 });
 
 app.get("/sign_nultisig", async ( req, res ) => {
-
+    const raw_tx: RawTransaction = JSON.parse(req.params.raw_tx);
+    const multisigScript: MultisigScript = JSON.parse(req.params.multisigScript);
+    const witnessesArgs: WitnessArgs[] = JSON.parse(req.params.witnessesArgs);
+    const input_cells: Cell[] = JSON.parse(req.params.input_cells);
+    const account_ids: number[] = JSON.parse(req.params.account_ids);
+    if(account_ids.length === multisigScript.N){
+        try {
+            const tx_hash = builder.sign_Multisig(raw_tx, multisigScript, witnessesArgs, input_cells, account_ids);
+            res.json({status:'ok', data: tx_hash});
+        } catch (error) {
+            res.json({status:'failed', data: error});
+        }
+    }else{
+        res.json({status:'failed', data: 'providing args length not matched.'})
+    }
 });
 
 app.get("/deploy_contract", async ( req, res ) => {
-
+    const raw_tx: RawTransaction = JSON.parse(req.params.raw_tx);
+    const compiled_code: string = JSON.parse(req.params.compiled_code);
+    const length: number = JSON.parse(req.params.length);
+    const input_cells: Cell[] = JSON.parse(req.params.input_cells);
+    const mode: ContractMode = JSON.parse(req.params.mode);
+    const account_id: number = JSON.parse(req.params.account_ids);
+    try {
+        const tx_hash = builder.deploy_contract(compiled_code, length, raw_tx, input_cells, mode, account_id);
+        res.json({status:'ok', data: tx_hash});
+    } catch (error) {
+        res.json({status:'failed', data: error});
+    }
 });
 
 app.get("/deploy_upgradble_contract", async ( req, res ) => {
 
+});
+
+app.get("/chain_config", async ( req, res ) => {
+    res.json(chain.getChainConfig());
+});
+
+app.get("/wallets", async ( req, res ) => {
+    res.json(chain.getWallets());
+});
+
+app.get("/wallet_by_id", async ( req, res ) => {
+    const id = Number(req.params.id);
+    res.json(chain.getWalletById(id));
 });
 
 app.listen( Config.SERVER_PORT, () => {
