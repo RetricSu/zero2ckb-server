@@ -1,3 +1,4 @@
+import path from "path";
 import type { 
     QueryOptions,
     WitnessArgs,
@@ -23,6 +24,7 @@ const corsOptions = {
 
 const app = express();
 app.use(cors(corsOptions));
+app.use('/static', express.static(path.join(__dirname, '../../src/script-examples')))
 
 const chain = new Chain();
 const builder = new Builder();
@@ -61,7 +63,7 @@ app.get("/sign_p2pkh", async ( req, res ) => {
     }
 });
 
-app.get("/sign_nultisig", async ( req, res ) => {
+app.get("/sign_multisig", async ( req, res ) => {
     const raw_tx: RawTransaction = JSON.parse(req.params.raw_tx);
     const multisigScript: MultisigScript = JSON.parse(req.params.multisigScript);
     const witnessesArgs: WitnessArgs[] = JSON.parse(req.params.witnessesArgs);
@@ -95,7 +97,17 @@ app.get("/deploy_contract", async ( req, res ) => {
 });
 
 app.get("/deploy_upgradble_contract", async ( req, res ) => {
-
+    const raw_tx: RawTransaction = JSON.parse(req.params.raw_tx);
+    const compiled_code: string = JSON.parse(req.params.compiled_code);
+    const length: number = JSON.parse(req.params.length);
+    const input_cells: Cell[] = JSON.parse(req.params.input_cells);
+    const account_id: number = JSON.parse(req.params.account_ids);
+    try {
+        const tx_hash = builder.deploy_upgradable_contract(compiled_code, length, raw_tx, input_cells, account_id);
+        res.json({status:'ok', data: tx_hash});
+    } catch (error) {
+        res.json({status:'failed', data: error});
+    }
 });
 
 app.get("/chain_config", async ( req, res ) => {
