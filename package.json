@@ -10,7 +10,7 @@
     "start": "node dist/index.js",
     "index": "tsc && node dist/index.js",
     "typeid": "tsc && node dist/test/typeid_test.js",
-    "server": "tsc && node dist/test/server.js"
+    "server": "concurrently \"tsc -w\" \"nodemon dist/test/server.js\""
   },
   "license": "MIT",
   "dependencies": {
@@ -26,6 +26,7 @@
     "@types/node": "^14.14.8",
     "@types/secp256k1": "^4.0.1",
     "ckb-js-toolkit": "^0.9.2",
+    "concurrently": "^5.3.0",
     "cors": "^2.8.5",
     "dotenv": "^8.2.0",
     "express": "^4.17.1",

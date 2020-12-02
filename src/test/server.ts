@@ -34,14 +34,26 @@ app.get( "/", ( req, res ) => {
 });
 
 app.get("/get_live_cells", async ( req, res ) => {
-    var query:QueryOptions = JSON.parse(req.params.query);
+    //var query:QueryOptions = JSON.parse(req.params.query);
+    var query:QueryOptions = {lock:{
+        hash_type: 'type',
+        code_hash: '0x9bd7e06f3ecf4be0f2fcd2188b23f1b9fcc88e5d4b65a8637b17723bbda3cce8',
+        args: '0x43d509d97f26007a285f39241cffcd411157196c'
+    }};
     const cells = await chain.queryCell(query);
     res.json(cells);
 });
 
 app.get("/get_tx", async ( req, res ) => {
-    var query:QueryOptions = JSON.parse(req.params.query);
+    //console.log(req.params.query);
+    //var query:QueryOptions = JSON.parse(req.params.query);
+    var query:QueryOptions = {lock:{
+        hash_type: 'type',
+        code_hash: '0x9bd7e06f3ecf4be0f2fcd2188b23f1b9fcc88e5d4b65a8637b17723bbda3cce8',
+        args: '0x43d509d97f26007a285f39241cffcd411157196c'
+    }};
     const cells = await chain.queryTransaction(query);
+    //console.log(cells);
     res.json(cells);
 });
 
