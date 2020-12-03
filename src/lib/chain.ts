@@ -14,20 +14,28 @@ export class Chain {
         this.indexer.startForever();
     }
 
-    async queryCell(query: QueryOptions){
+    async queryCell(query: QueryOptions, _limit?: number){
+        const limit = _limit || 10;
         const cellCollector = new CellCollector(this.indexer, query);
         const result = [];
         for await(const cell of cellCollector.collect()){
             result.push(cell);
+            if(result.length > limit){
+                break;
+            }
         } 
         return result;
     }
 
-    async queryTransaction(query: QueryOptions){
+    async queryTransaction(query: QueryOptions, _limit?: number){
+        const limit = _limit || 10;
         const txColletor = new TransactionCollector(this.indexer, query);
         const result = [];
         for await(const cell of txColletor.collect()){
             result.push(cell);
+            if(result.length > limit){
+                break;
+            }
         } 
         return result;
     }
