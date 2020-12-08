@@ -47,9 +47,20 @@ app.get("/get_tx", async ( req, res ) => {
 });
 
 app.get("/send_tx", async ( req, res ) => {
-    var tx: Transaction = JSON.parse(''+req.query.tx);
-    const tx_hash = await builder.send_tx(tx);
-    res.json(tx_hash);
+    /***  
+     * todo: this might be attack by malicious
+     * need to confirm the str is not harmful before eval it.
+     */
+    const str = JSON.stringify(eval("(" + req.query.tx + ")"));
+    const tx: Transaction = JSON.parse(str);
+    console.log(JSON.stringify(tx), tx.version);
+    try {
+        const tx_hash = await builder.send_tx(tx);
+        res.json({status:'ok', data: tx_hash});   
+    } catch (error) {
+        console.log(error);
+        res.json({status:'failed', data: error});
+    }
 });
 
 app.get("/sign_p2pkh", async ( req, res ) => {
@@ -110,6 +121,76 @@ app.get("/deploy_upgradble_contract", async ( req, res ) => {
         res.json({status:'failed', data: error});
     }
 });
+
+
+app.get("/get_seriliazed_witness", async ( req, res  ) => {
+    /***  
+     * todo: this might be attack by malicious
+     * need to confirm the str is not harmful before eval it.
+     */
+    const str = JSON.stringify(eval("(" + req.query.witnessArgs + ")"));
+    const witnessArgs: WitnessArgs = JSON.parse(str);
+    try {
+        const witness = builder.serializeWitness(witnessArgs);
+        res.json({status:'ok', data: witness});
+    } catch (error) {
+        const err = JSON.stringify(error);
+        res.json({status:'failed', data: err});
+    }
+});
+
+
+app.get("/get_tx_hash", async ( req, res  ) => {
+    /***  
+     * todo: this might be attack by malicious
+     * need to confirm the str is not harmful before eval it.
+     */
+    const str = JSON.stringify(eval("(" + req.query.raw_tx + ")"));
+    const raw_tx = JSON.parse(str);
+    try {
+        const tx_hash = builder.generateTxHash(raw_tx);
+        res.json({status:'ok', data: tx_hash});
+    } catch (error) {
+        const err = JSON.stringify(error);
+        res.json({status:'failed', data: err});
+    }
+});
+
+app.get("/get_signature", async ( req, res  ) => {
+    const msg: string = req.query.message?.toString() || '';
+    const key: string = req.query.private_key?.toString() || '';
+    try {
+        const signature = builder.signMessageByPrivKey(msg, key);
+        res.json({status:'ok', data: signature});
+    } catch (error) {
+        console.log(error);
+        const err = JSON.stringify(error);
+        res.json({status:'failed', data: err});
+    }
+});
+
+app.get("/get_sign_message", async ( req, res  ) => {
+    /***  
+     * todo: this might be attack by malicious
+     * need to confirm the str is not harmful before eval it.
+     */
+    const str = JSON.stringify(eval("(" + req.query.raw_tx + ")"));
+    const raw_tx: RawTransaction = JSON.parse(str);
+    const witnessArgs: WitnessArgs[] = JSON.parse(''+req.query.witnessArgs);
+    
+    const outpoints = raw_tx.inputs.map(input => input.previous_output);
+    const input_cells: Cell[] = await chain.getInputCellsByOutpoints(outpoints);
+    
+    try {
+        const tx_hash = builder.generateTxHash(raw_tx);
+        const messages = builder.toMessage(tx_hash, raw_tx, witnessArgs, input_cells);
+        res.json({status:'ok', data: messages});
+    } catch (error) {
+        const err = JSON.stringify(error);
+        res.json({status:'failed', data: err});
+    }
+});
+
 
 app.get("/chain_config", async ( req, res ) => {
     res.json(chain.getChainConfig());

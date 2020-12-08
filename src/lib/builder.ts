@@ -76,7 +76,7 @@ export interface Cell {
   lock: Script;
   type?: Script;
   data: HexString;
-  out_point: OutPoint;
+  out_point?: OutPoint;
 }
 
 export interface InputsGroup {
@@ -596,8 +596,12 @@ export class Builder {
     return key.signRecoverable(msg, private_key);
   }
 
+  signMessageByPrivKey(msg: HexString, privKey: HexString): HexString{
+    return key.signRecoverable(msg, privKey);
+  }
+
   async send_tx(tx: Transaction): Promise<HexString>{
-    const rpc = new RPC("http://127.0.0.1:8114");
+    const rpc = new RPC(Const.RPC_URL);
     const real_txHash = await rpc.send_transaction(tx);
     return real_txHash;
   }
@@ -620,45 +624,59 @@ export class Builder {
     witnessArgs: WitnessArgs[],
     inputCells: Cell[]
   ): Message[] {
-    const witnesses = this.serializeWitnesses(witnessArgs);
-    const tx: Transaction = { ...raw_tx, ...{ witnesses: witnesses } };
-    const messages = [];
-    const used = tx.inputs.map((_input) => false);
-    for (let i = 0; i < tx.inputs.length; i++) {
-      if (used[i]) {
-        continue;
-      }
-      if (i >= tx.witnesses.length) {
-        throw new Error(
-          `Input ${i} starts a new script group, but witness is missing!`
-        );
-      }
-      used[i] = true;
-      this.hasher.update(tx_hash);
-      const firstWitness = new Reader(tx.witnesses[i]);
-      this.hasher.update(serializeBigInt(firstWitness.length()));
-      this.hasher.update(firstWitness);
-      for (
-        let j = i + 1;
-        j < tx.inputs.length && j < tx.witnesses.length;
-        j++
-      ) {
-        if (inputCells[i].lock === inputCells[j].lock) {
-          used[j] = true;
-          const currentWitness = new Reader(tx.witnesses[j]);
-          this.hasher.update(serializeBigInt(currentWitness.length()));
-          this.hasher.update(currentWitness);
-        }
-      }
-      messages.push({
-        index: i,
-        message: this.hasher.digestHex(), // hex string
-        lock: inputCells[i].lock,
-      });
+    const messages: Message[] = [];
+    const signedWitness: HexString[] = [];
+
+    // 0. group the input with same lock script for witness
+    const input_groups = this.groupInputs(inputCells);
+
+    for (let i = 0; i < input_groups.length; i++) {
+      const group_index = input_groups[i].child[0];
+
+      //reserve dummy lock for the first witness
+      const dummy_lock = "0x" + "0".repeat(130);
+      let witness_args = witnessArgs[group_index];
+      witness_args.lock = dummy_lock;
 
       this.hasher = new CKBHasher();
+
+      // 1. hash the txHash
+      this.hasher.update(tx_hash);
+
+      // 2. hash the witness in groups order.
+      // - 2.1 hash the first witness in group
+      const firstWitness = new Reader(this.serializeWitness(witness_args));
+      this.hasher.update(serializeBigInt(firstWitness.length()));
+      this.hasher.update(firstWitness);
+      // - 2.2 hash the rest of witness in the same group
+      for (let j = 1; j < input_groups[i].child.length; j++) {
+        const witness_index = input_groups[i].child[j];
+        let witness_args_in_group = witnessArgs[witness_index];
+        const witeness_in_group = new Reader(
+          this.serializeWitness(witness_args_in_group)
+        );
+        this.hasher.update(serializeBigInt(witeness_in_group.length()));
+        this.hasher.update(witeness_in_group);
+      }
+      // - 2.3 hash the witness which do not in any input group
+      for (let k = raw_tx.inputs.length; k < witnessArgs.length; k++) {
+        let witness_args_alone = witnessArgs[k];
+        const witeness_alone = new Reader(
+          this.serializeWitness(witness_args_alone)
+        );
+        this.hasher.update(serializeBigInt(witeness_alone.length()));
+        this.hasher.update(witeness_alone);
+      }
+
+      // 3. generate the sign-message, ready to be signed.
+      const sig_hash = this.hasher.digestHex();
+      messages.push({
+        index: i,
+        message: sig_hash, // hex string
+        lock: inputCells[i].lock,
+      });
     }
-    return messages;
+    return messages; 
   }
 
   serializeWitnesses(witnessArgs: WitnessArgs[]) {
