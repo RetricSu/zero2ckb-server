@@ -9,13 +9,16 @@ import User from "../config/user.json";
 import Const from "../config/const.json";
 import Config from "../config/dev_cofig.json";
 import { RPC } from "ckb-js-toolkit";
+import utils from './utils';
 
 export class Chain {
     private indexer;
+    private rpc;
 
     constructor(){
         this.indexer = new Indexer(Const.RPC_URL, Const.DB_URL);
         this.indexer.startForever();
+        this.rpc = new RPC(Const.RPC_URL);
     }
 
     async queryCell(query: QueryOptions, _limit?: number){
@@ -24,7 +27,7 @@ export class Chain {
         const result = [];
         for await(const cell of cellCollector.collect()){
             result.push(cell);
-            if(result.length > limit){
+            if(result.length >= limit){
                 break;
             }
         } 
@@ -47,21 +50,37 @@ export class Chain {
     async getInputCellsByOutpoints(
         outpoints: OutPoint[]
       ){
-        const rpc = new RPC(Const.RPC_URL);
         const cells: SimpleCell[] = [];
-
         for(let i=0;i<outpoints.length;i++){
-            const data = await rpc.get_live_cell(outpoints[i], true);
+            const data = await this.rpc.get_live_cell(outpoints[i], true);
             if(data.status === "live")
                 cells.push({...data.cell.output, ...{data: data.cell.data.content}});
             else continue;
         }
 
         return cells;
-      }
+    }
 
-    queryBlock(){
+    async getNewBlocks(limit: number){
+        const height =  await this.rpc.get_tip_block_number();
+        const blocks:Array<any> = [];
 
+        const fetch = async (num: number)=> {
+            const block_number = '0x' + (BigInt(height) - BigInt(num)).toString(16);
+            const block = await this.rpc.get_block_by_number(block_number);
+            return block;
+        }
+
+        let fetching_blocks = utils.asyncGenerator(0, limit, fetch);
+        for await (let block of fetching_blocks) {
+            blocks.push(block);
+        }
+        return blocks;
+    }
+
+    async getTransaction(tx_hash: string){
+        const tx = await this.rpc.get_transaction(tx_hash);
+        return tx;
     }
 
     queryWallet(){

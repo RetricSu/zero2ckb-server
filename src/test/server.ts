@@ -15,6 +15,7 @@ import { Chain } from "../lib/chain";
 import * as Config from "../config/const.json";
 import express from "express";
 import cors from "cors";
+import { JsxEmit } from "typescript";
 
 const corsOptions = {
     origin: Config.CROS_SERVER_LIST,
@@ -34,14 +35,16 @@ app.get( "/", ( req, res ) => {
 });
 
 app.get("/get_live_cells", async ( req, res ) => {
+    const limit = parseInt(''+req.query.limit) || 10;
     var query:QueryOptions = JSON.parse(''+req.query.query);
-    const cells = await chain.queryCell(query);
+    const cells = await chain.queryCell(query, limit);
     res.json(cells);
 });
 
-app.get("/get_tx", async ( req, res ) => {
+app.get("/get_txs", async ( req, res ) => {
+    const limit = parseInt(''+req.query.limit) || 10;
     var query:QueryOptions = JSON.parse(''+req.query.query);
-    const cells = await chain.queryTransaction(query);
+    const cells = await chain.queryTransaction(query, limit);
     //console.log(cells);
     res.json(cells);
 });
@@ -188,6 +191,29 @@ app.get("/get_sign_message", async ( req, res  ) => {
     } catch (error) {
         const err = JSON.stringify(error);
         res.json({status:'failed', data: err});
+    }
+});
+
+
+app.get("/get_new_blocks", async ( req, res ) => {
+    const limit: string = req.query.limit?.toString() || '';
+    try {
+        const blocks = await chain.getNewBlocks(parseInt(limit));
+        res.json({status:'ok', data: blocks});
+    } catch (error) {
+        console.log(error);
+        res.json({status:'failed', data:'error:'+JSON.stringify(error)});
+    }
+});
+
+app.get("/get_transaction_by_hash", async ( req, res ) => {
+    const tx_hash: string = req.query.limit?.toString() || '';
+    try {
+        const tx = await chain.getTransaction(tx_hash);
+        res.json({status:'ok', data: tx});
+    } catch (error) {
+        console.log(error);
+        res.json({status:'failed', data:'error:'+JSON.stringify(error)});
     }
 });
 
