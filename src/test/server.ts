@@ -41,6 +41,12 @@ app.get("/get_live_cells", async ( req, res ) => {
     res.json(cells);
 });
 
+app.get("/get_balance", async ( req, res ) => {
+    const lock_args = ''+req.query.lock_args;
+    const balance = await chain.getBalance(lock_args);
+    res.json(balance);
+});
+
 app.get("/get_txs", async ( req, res ) => {
     const limit = parseInt(''+req.query.limit) || 10;
     var query:QueryOptions = JSON.parse(''+req.query.query);

@@ -34,6 +34,11 @@ export class Chain {
         return result;
     }
 
+    async getBalance(lock_args: string){
+        /**   todo   */
+        return 0;
+    }
+
     async queryTransaction(query: QueryOptions, _limit?: number){
         const limit = _limit || 10;
         const txColletor = new TransactionCollector(this.indexer, query);
