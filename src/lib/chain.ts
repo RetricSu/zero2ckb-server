@@ -23,7 +23,7 @@ export class Chain {
 
     async queryCell(query: QueryOptions, _limit?: number){
         const limit = _limit || 10;
-        const cellCollector = new CellCollector(this.indexer, {...query, ...{order: 'desc'}});
+        const cellCollector = new CellCollector(this.indexer, query);//order: 'desc'
         const result = [];
         for await(const cell of cellCollector.collect()){
             result.push(cell);
