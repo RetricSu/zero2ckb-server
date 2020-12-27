@@ -3,7 +3,8 @@ import type {
     QueryOptions,
     WitnessArgs,
     Transaction,
-    RawTransaction
+    RawTransaction,
+    Cell as FormalCell,
 } from "@ckb-lumos/base";
 import type{
     Cell,
@@ -15,7 +16,6 @@ import { Chain } from "../lib/chain";
 import * as Config from "../config/const.json";
 import express from "express";
 import cors from "cors";
-import { JsxEmit } from "typescript";
 
 const corsOptions = {
     origin: Config.CROS_SERVER_LIST,
@@ -223,6 +223,17 @@ app.get("/get_transaction_by_hash", async ( req, res ) => {
     }
 });
 
+app.get("/get_minimal_cell_capacity", async ( req, res ) => {
+    const cell: FormalCell = JSON.parse(''+req.query.cell);
+    try {
+        const bytes = chain.getMinimalCapacity(cell);
+        console.log(bytes);
+        res.json({status:'ok', data: bytes.toString()});
+    } catch (error) {
+        console.log(error);
+        res.json({status:'failed', data:'error:'+JSON.stringify(error)});
+    }
+});
 
 app.get("/chain_config", async ( req, res ) => {
     res.json(chain.getChainConfig());

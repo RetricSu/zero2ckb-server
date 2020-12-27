@@ -10,6 +10,7 @@ import Const from "../config/const.json";
 import Config from "../config/dev_cofig.json";
 import { RPC } from "ckb-js-toolkit";
 import utils from './utils';
+const { minimalCellCapacity, generateAddress, parseAddress } = require("@ckb-lumos/helpers")
 
 export class Chain {
     private indexer;
@@ -110,5 +111,9 @@ export class Chain {
 
     getWalletById(id: number){
         return User.account[id];
+    }
+
+    getMinimalCapacity(cell: Cell){
+        return minimalCellCapacity(cell);
     }
 }
