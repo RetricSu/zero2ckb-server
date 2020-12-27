@@ -29,6 +29,8 @@
     "DB_URL": "/tmp/indexed-data",
     "SERVER_PORT": "5000",
     "CROS_SERVER_LIST": [
-        "http://localhost:3000"
+        "http://localhost:3000",
+        "https://asdfvaswe23.xyz/",
+        "www.asdfvaswe23.xyz"
     ]
 }
