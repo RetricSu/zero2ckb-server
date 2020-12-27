@@ -10,7 +10,8 @@
     "start": "node dist/index.js",
     "index": "tsc && node dist/index.js",
     "typeid": "tsc && node dist/test/typeid_test.js",
-    "server": "concurrently \"tsc -w\" \"nodemon dist/test/server.js\""
+    "server": "concurrently \"tsc -w\" \"nodemon dist/test/server.js\"",
+    "deploy": "node dist/test/server.js"
   },
   "license": "MIT",
   "dependencies": {
