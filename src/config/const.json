@@ -30,7 +30,7 @@
     "SERVER_PORT": "9112",
     "CROS_SERVER_LIST": [
         "http://localhost:3000",
-        "https://asdfvaswe23.xyz/",
-        "www.asdfvaswe23.xyz"
+        "https://asdfvaswe23.xyz",
+        "https://www.asdfvaswe23.xyz"
     ]
 }
