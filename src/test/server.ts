@@ -50,9 +50,13 @@ app.get("/get_balance", async ( req, res ) => {
 app.get("/get_txs", async ( req, res ) => {
     const limit = parseInt(''+req.query.limit) || 10;
     var query:QueryOptions = JSON.parse(''+req.query.query);
-    const cells = await chain.queryTransaction(query, limit);
-    //console.log(cells);
-    res.json(cells);
+    try {
+        const cells = await chain.queryTransaction(query, limit);
+        //console.log(cells);
+        res.json({status: 'ok', data: cells});   
+    } catch (error) {
+        res.json({status: 'failed', data: error})
+    }
 });
 
 app.get("/send_tx", async ( req, res ) => {
