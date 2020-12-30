@@ -72,7 +72,7 @@ app.get("/send_tx", async ( req, res ) => {
         res.json({status:'ok', data: tx_hash});   
     } catch (error) {
         console.log(error);
-        res.json({status:'failed', data: error});
+        res.json({status:'failed', data: error.message});
     }
 });
 
@@ -84,7 +84,7 @@ app.get("/sign_p2pkh", async ( req, res ) => {
         const tx_hash = builder.sign_P2PKH(raw_tx, witnessesArgs, input_cells);
         res.json({status:'ok', data: tx_hash});
     } catch (error) {
-        res.json({status:'failed', data: error});
+        res.json({status:'failed', data: error.message});
     }
 });
 
@@ -99,7 +99,7 @@ app.get("/sign_multisig", async ( req, res ) => {
             const tx_hash = builder.sign_Multisig(raw_tx, multisigScript, witnessesArgs, input_cells, account_ids);
             res.json({status:'ok', data: tx_hash});
         } catch (error) {
-            res.json({status:'failed', data: error});
+            res.json({status:'failed', data: error.message});
         }
     }else{
         res.json({status:'failed', data: 'providing args length not matched.'})
@@ -117,7 +117,7 @@ app.get("/deploy_contract", async ( req, res ) => {
         const tx_hash = builder.deploy_contract(compiled_code, length, raw_tx, input_cells, mode, account_id);
         res.json({status:'ok', data: tx_hash});
     } catch (error) {
-        res.json({status:'failed', data: error});
+        res.json({status:'failed', data: error.message});
     }
 });
 
@@ -131,7 +131,7 @@ app.get("/deploy_upgradble_contract", async ( req, res ) => {
         const tx_hash = builder.deploy_upgradable_contract(compiled_code, length, raw_tx, input_cells, account_id);
         res.json({status:'ok', data: tx_hash});
     } catch (error) {
-        res.json({status:'failed', data: error});
+        res.json({status:'failed', data: error.message});
     }
 });
 
@@ -147,8 +147,7 @@ app.get("/get_seriliazed_witness", async ( req, res  ) => {
         const witness = builder.serializeWitness(witnessArgs);
         res.json({status:'ok', data: witness});
     } catch (error) {
-        const err = JSON.stringify(error);
-        res.json({status:'failed', data: err});
+        res.json({status:'failed', data: error.message});
     }
 });
 
@@ -164,8 +163,7 @@ app.get("/get_tx_hash", async ( req, res  ) => {
         const tx_hash = builder.generateTxHash(raw_tx);
         res.json({status:'ok', data: tx_hash});
     } catch (error) {
-        const err = JSON.stringify(error);
-        res.json({status:'failed', data: err});
+        res.json({status:'failed', data: error.message});
     }
 });
 
@@ -177,7 +175,7 @@ app.get("/get_signature", async ( req, res  ) => {
         res.json({status:'ok', data: signature});
     } catch (error) {
         console.log(error);
-        res.json({status:'failed', data: error});
+        res.json({status:'failed', data: error.message});
     }
 });
 
@@ -201,7 +199,7 @@ app.get("/get_sign_message", async ( req, res  ) => {
             res.json({status:'ok', data: messages});
         } catch (error) {
             console.log(error);
-            res.json({status:'failed', data: error});
+            res.json({status:'failed', data: error.message});
         }
     } catch (error) {
         console.log(error);
@@ -217,7 +215,7 @@ app.get("/get_new_blocks", async ( req, res ) => {
         res.json({status:'ok', data: blocks});
     } catch (error) {
         console.log(error);
-        res.json({status:'failed', data:'error:'+JSON.stringify(error)});
+        res.json({status:'failed', data: error.message});
     }
 });
 
