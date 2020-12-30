@@ -177,8 +177,7 @@ app.get("/get_signature", async ( req, res  ) => {
         res.json({status:'ok', data: signature});
     } catch (error) {
         console.log(error);
-        const err = JSON.stringify(error);
-        res.json({status:'failed', data: err});
+        res.json({status:'failed', data: error});
     }
 });
 
@@ -192,15 +191,21 @@ app.get("/get_sign_message", async ( req, res  ) => {
     const witnessArgs: WitnessArgs[] = JSON.parse(''+req.query.witnessArgs);
     
     const outpoints = raw_tx.inputs.map(input => input.previous_output);
-    const input_cells: Cell[] = await chain.getInputCellsByOutpoints(outpoints);
-    
+    var input_cells: Cell[] = [];
+
     try {
-        const tx_hash = builder.generateTxHash(raw_tx);
-        const messages = builder.toMessage(tx_hash, raw_tx, witnessArgs, input_cells);
-        res.json({status:'ok', data: messages});
+        input_cells = await chain.getInputCellsByOutpoints(outpoints);
+        try {
+            const tx_hash = builder.generateTxHash(raw_tx);
+            const messages = builder.toMessage(tx_hash, raw_tx, witnessArgs, input_cells);
+            res.json({status:'ok', data: messages});
+        } catch (error) {
+            console.log(error);
+            res.json({status:'failed', data: error});
+        }
     } catch (error) {
-        const err = JSON.stringify(error);
-        res.json({status:'failed', data: err});
+        console.log(error);
+        res.json({status:'failed', data: error});
     }
 });
 
