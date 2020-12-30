@@ -205,7 +205,7 @@ app.get("/get_sign_message", async ( req, res  ) => {
         }
     } catch (error) {
         console.log(error);
-        res.json({status:'failed', data: error});
+        res.json({status:'failed', data: error.message});
     }
 });
 
