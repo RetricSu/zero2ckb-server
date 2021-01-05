@@ -27,11 +27,15 @@
     "TYPE_ID_CONTRACT": "../NERVOS-DAO/src/script-examples/type_id",
     "RPC_URL": "http://127.0.0.1:8114",
     "DB_URL": "/tmp/indexed-data",
-    "SERVER_PORT": "9112",
+    "SERVER_PORT": {
+        "development": "5000",
+        "production": "9112"
+    },
     "CROS_SERVER_LIST": [
         "http://localhost:3000",
         "https://asdfvaswe23.xyz",
         "https://www.asdfvaswe23.xyz",
-        "https://zero2ckb.ckbapp.dev/"
-    ]
+        "https://zero2ckb.ckbapp.dev"
+    ],
+    "mode": "production"
 }

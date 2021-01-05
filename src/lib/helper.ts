@@ -1,3 +1,5 @@
+import * as Const from '../config/const.json';
+
 const serializeBigInt = function (i: number) {
     const view = new DataView(new ArrayBuffer(8));
     view.setUint32(0, i, true);
@@ -15,8 +17,17 @@ const buf2hex = function (buffer: ArrayBuffer) { // buffer is an ArrayBuffer
     return Array.prototype.map.call(new Uint8Array(buffer), x => ('00' + x.toString(16)).slice(-2)).join('');
 }
 
+const get_env_mode = function(){
+    // check if we are in development or production
+    // if mode === 'development', code should run on local
+    // if mode === 'production', code should be deployed on server
+    // todo: maybe auto test using os === 'ubuntu' or something.
+    return Const.mode;
+}
+
 export {
     serializeBigInt,
     toBigUInt64LE,
-    buf2hex
+    buf2hex,
+    get_env_mode,
 }

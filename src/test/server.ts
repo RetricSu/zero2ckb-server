@@ -14,6 +14,7 @@ import type{
 import { Builder } from "../lib/builder";
 import { Chain } from "../lib/chain";
 import * as Config from "../config/const.json";
+import { get_env_mode } from '../lib/helper';
 import express from "express";
 import cors from "cors";
 
@@ -22,6 +23,8 @@ const corsOptions = {
     optionsSuccessStatus: 200, // some legacy browsers (IE11, various SmartTVs) choke on 204
     credentials: true
 }
+
+const PORT = get_env_mode() === 'development' ? Config.SERVER_PORT.development : Config.SERVER_PORT.production;
 
 const app = express();
 app.use(cors(corsOptions));
@@ -186,7 +189,8 @@ app.get("/get_sign_message", async ( req, res  ) => {
      */
     const str = JSON.stringify(eval("(" + req.query.raw_tx + ")"));
     const raw_tx: RawTransaction = JSON.parse(str);
-    const witnessArgs: WitnessArgs[] = JSON.parse(''+req.query.witnessArgs);
+    //const witnessArgs: WitnessArgs[] = JSON.parse(''+req.query.witnessArgs);
+    const witnesses: string[] = JSON.parse(''+req.query.witnessArgs);
     
     const outpoints = raw_tx.inputs.map(input => input.previous_output);
     var input_cells: Cell[] = [];
@@ -195,7 +199,7 @@ app.get("/get_sign_message", async ( req, res  ) => {
         input_cells = await chain.getInputCellsByOutpoints(outpoints);
         try {
             const tx_hash = builder.generateTxHash(raw_tx);
-            const messages = builder.toMessage(tx_hash, raw_tx, witnessArgs, input_cells);
+            const messages = builder.toMessage(tx_hash, raw_tx, witnesses, input_cells);
             res.json({status:'ok', data: messages});
         } catch (error) {
             console.log(error);
@@ -255,6 +259,6 @@ app.get("/wallet_by_id", async ( req, res ) => {
     res.json(chain.getWalletById(id));
 });
 
-app.listen( Config.SERVER_PORT, () => {
-    console.log( `server started at http://localhost:${ Config.SERVER_PORT }` );
+app.listen( PORT, () => {
+    console.log( `server started at http://localhost:${ PORT }` );
 } );

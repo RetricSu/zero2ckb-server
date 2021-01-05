@@ -10,6 +10,7 @@ import Const from "../config/const.json";
 import Config from "../config/dev_cofig.json";
 import { RPC } from "ckb-js-toolkit";
 import utils from './utils';
+import { get_env_mode } from './helper';
 const { minimalCellCapacity, generateAddress, parseAddress } = require("@ckb-lumos/helpers")
 
 export class Chain {
@@ -56,13 +57,30 @@ export class Chain {
     async getInputCellsByOutpoints(
         outpoints: OutPoint[]
       ){
-        const cells: SimpleCell[] = [];
-        for(let i=0;i<outpoints.length;i++){
-            const data = await this.rpc.get_live_cell(outpoints[i], true);
-            if(data.status === "live")
-                cells.push({...data.cell.output, ...{data: data.cell.data.content}});
-            else continue;
+        const cells: Array<any> = [];
+
+        const get_live_cell = async (num: number): Promise<Cell | undefined> => {
+            const data = await this.rpc.get_live_cell(outpoints[num], true);
+            if(data.status === "live"){
+                let c: Cell = {...data.cell.output, ...{data: data.cell.data.content}};
+                return c;
+            }else{
+                return undefined;
+            }
         }
+
+        let find_cells = utils.asyncGenerator(0, outpoints.length, get_live_cell);
+        for await (let cell of find_cells) {
+            if(cell !== undefined)
+                cells.push(cell);
+        }
+
+        // for(let i=0;i<outpoints.length;i++){
+        //     const data = await this.rpc.get_live_cell(outpoints[i], true);
+        //     if(data.status === "live")
+        //         cells.push({...data.cell.output, ...{data: data.cell.data.content}});
+        //     else continue;
+        // }
 
         return cells;
     }
@@ -102,7 +120,7 @@ export class Chain {
     }
 
     getChainConfig(){
-        return Config;
+        return get_env_mode() === 'development' ? Config.development : Config.production;
     }
 
     getWallets(){

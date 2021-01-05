@@ -42,7 +42,7 @@
  */
 import path from "path";
 import fs from "fs";
-import * as Config from "../config/dev_cofig.json";
+import * as chainConfig from "../config/dev_cofig.json";
 import * as Const from "../config/const.json";
 import * as User from "../config/user.json";
 import { RPC, validators, normalizers, transformers, Reader } from "ckb-js-toolkit";
@@ -62,8 +62,10 @@ import {
 } from "@ckb-lumos/base";
 import { key, Keystore } from "@ckb-lumos/hd";
 import { serializeBigInt, toBigUInt64LE, buf2hex } from "./helper";
+import { get_env_mode } from './helper';
 
 const { CKBHasher, ckbHash } = utils;
+const Config = get_env_mode() === 'development' ?  chainConfig.development : chainConfig.production;
 
 export interface Message {
   index: number;
@@ -582,9 +584,13 @@ export class Builder {
   }
 
   generateTxHash(raw_tx: RawTransaction): HexString {
-    return ckbHash(
-      core.SerializeRawTransaction(normalizers.NormalizeRawTransaction(raw_tx))
-    ).serializeJson();
+    try {
+      return ckbHash(
+        core.SerializeRawTransaction(normalizers.NormalizeRawTransaction(raw_tx))
+      ).serializeJson();
+    } catch (error) {
+      return error.message; 
+    }
   }
 
   signMessage(msg: HexString, account_id:number=0): HexString {
@@ -621,7 +627,7 @@ export class Builder {
   toMessage(
     tx_hash: HexString,
     raw_tx: RawTransaction,
-    witnessArgs: WitnessArgs[],
+    witnesses: HexString[],
     inputCells: Cell[]
   ): Message[] {
     const messages: Message[] = [];
@@ -629,13 +635,14 @@ export class Builder {
 
     // 0. group the input with same lock script for witness
     const input_groups = this.groupInputs(inputCells);
+    console.log(input_groups);
 
     for (let i = 0; i < input_groups.length; i++) {
       const group_index = input_groups[i].child[0];
-
+      
       //reserve dummy lock for the first witness
       const dummy_lock = "0x" + "0".repeat(130);
-      let witness_args = witnessArgs[group_index];
+      let witness_args = this.deserializeWitnessArgs(witnesses[group_index]);
       witness_args.lock = dummy_lock;
 
       this.hasher = new CKBHasher();
@@ -651,19 +658,13 @@ export class Builder {
       // - 2.2 hash the rest of witness in the same group
       for (let j = 1; j < input_groups[i].child.length; j++) {
         const witness_index = input_groups[i].child[j];
-        let witness_args_in_group = witnessArgs[witness_index];
-        const witeness_in_group = new Reader(
-          this.serializeWitness(witness_args_in_group)
-        );
+        const witeness_in_group = new Reader(witnesses[witness_index] ? witnesses[witness_index] : '0x');
         this.hasher.update(serializeBigInt(witeness_in_group.length()));
         this.hasher.update(witeness_in_group);
       }
       // - 2.3 hash the witness which do not in any input group
-      for (let k = raw_tx.inputs.length; k < witnessArgs.length; k++) {
-        let witness_args_alone = witnessArgs[k];
-        const witeness_alone = new Reader(
-          this.serializeWitness(witness_args_alone)
-        );
+      for (let k = raw_tx.inputs.length; k < witnesses.length; k++) {
+        const witeness_alone = new Reader(witnesses[k] ? witnesses[k] : '0x');
         this.hasher.update(serializeBigInt(witeness_alone.length()));
         this.hasher.update(witeness_alone);
       }
@@ -676,7 +677,12 @@ export class Builder {
         lock: inputCells[i].lock,
       });
     }
-    return messages; 
+    return messages;
+  }
+
+  deserializeWitnessArgs(witness: HexString) {
+    // todo: complete this function for input_type and output_type
+    return {lock:'', input_type: '', output_type:''}
   }
 
   serializeWitnesses(witnessArgs: WitnessArgs[]) {
