@@ -584,13 +584,16 @@ export class Builder {
   }
 
   generateTxHash(raw_tx: RawTransaction): HexString {
-    try {
-      return ckbHash(
-        core.SerializeRawTransaction(normalizers.NormalizeRawTransaction(raw_tx))
-      ).serializeJson();
-    } catch (error) {
-      return error.message; 
-    }
+    return ckbHash(
+      core.SerializeRawTransaction(normalizers.NormalizeRawTransaction(raw_tx))
+    ).serializeJson();
+    // try {
+    //   return ckbHash(
+    //     core.SerializeRawTransaction(normalizers.NormalizeRawTransaction(raw_tx))
+    //   ).serializeJson();
+    // } catch (error) {
+    //   return error.message; 
+    // }
   }
 
   signMessage(msg: HexString, account_id:number=0): HexString {
