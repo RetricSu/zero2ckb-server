@@ -234,6 +234,27 @@ app.get("/get_transaction_by_hash", async ( req, res ) => {
     }
 });
 
+app.get("/get_block_by_tx_hash", async ( req, res ) => {
+    const tx_hash: string = req.query.tx_hash?.toString() || '';
+    try {
+        const tx = await chain.getTransaction(tx_hash);
+        if(tx.tx_status.status === 'committed'){
+            const block_hash = tx.tx_status.block_hash;
+            try {
+                const tx = await chain.getBlockByHash(block_hash);
+                res.json({status:'ok', data: tx});
+            } catch (getblock_error) {
+                res.json({status:'failed', data: getblock_error.messages});
+            }
+        }else{
+            res.json({status:'failed', data: `tx status: ${tx.tx_status.status}`});
+        }
+    } catch (error) {
+        console.log(error);
+        res.json({status:'failed', data:'error:'+JSON.stringify(error)});
+    }
+});
+
 app.get("/get_minimal_cell_capacity", async ( req, res ) => {
     const cell: FormalCell = JSON.parse(''+req.query.cell);
     try {

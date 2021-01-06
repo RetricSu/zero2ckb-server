@@ -107,6 +107,11 @@ export class Chain {
         return tx;
     }
 
+    async getBlockByHash(block_hash: string){
+        const block = await this.rpc.get_block(block_hash);
+        return block;
+    }
+
     queryWallet(){
 
     }
