@@ -37,5 +37,5 @@
         "https://www.asdfvaswe23.xyz",
         "https://zero2ckb.ckbapp.dev"
     ],
-    "mode": "development"
+    "mode": "production"
 }
