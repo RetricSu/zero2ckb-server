@@ -638,7 +638,7 @@ export class Builder {
 
     // 0. group the input with same lock script for witness
     const input_groups = this.groupInputs(inputCells);
-    console.log(input_groups);
+    //console.log(input_groups);
 
     for (let i = 0; i < input_groups.length; i++) {
       const group_index = input_groups[i].child[0];

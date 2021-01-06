@@ -67,9 +67,9 @@ app.get("/send_tx", async ( req, res ) => {
      * todo: this might be attack by malicious
      * need to confirm the str is not harmful before eval it.
      */
-    const str = JSON.stringify(eval("(" + req.query.tx + ")"));
-    const tx: Transaction = JSON.parse(str);
-    console.log(JSON.stringify(tx), tx.version);
+    //const str = JSON.stringify(eval("(" + req.query.tx + ")"));
+    const tx: Transaction = JSON.parse(''+req.query.tx);
+    //console.log(JSON.stringify(tx), tx.version);
     try {
         const tx_hash = await builder.send_tx(tx);
         res.json({status:'ok', data: tx_hash});   
@@ -144,8 +144,8 @@ app.get("/get_seriliazed_witness", async ( req, res  ) => {
      * todo: this might be attack by malicious
      * need to confirm the str is not harmful before eval it.
      */
-    const str = JSON.stringify(eval("(" + req.query.witnessArgs + ")"));
-    const witnessArgs: WitnessArgs = JSON.parse(str);
+    //const str = JSON.stringify(eval("(" + req.query.witnessArgs + ")"));
+    const witnessArgs: WitnessArgs = JSON.parse(''+req.query.witnessArgs);
     try {
         const witness = builder.serializeWitness(witnessArgs);
         res.json({status:'ok', data: witness});
@@ -160,8 +160,8 @@ app.get("/get_tx_hash", async ( req, res  ) => {
      * todo: this might be attack by malicious
      * need to confirm the str is not harmful before eval it.
      */
-    const str = JSON.stringify(eval("(" + req.query.raw_tx + ")"));
-    const raw_tx = JSON.parse(str);
+    //const str = JSON.stringify(eval("(" + req.query.raw_tx + ")"));
+    const raw_tx = JSON.parse(''+req.query.raw_tx);
     try {
         const tx_hash = builder.generateTxHash(raw_tx);
         res.json({status:'ok', data: tx_hash});
@@ -187,8 +187,8 @@ app.get("/get_sign_message", async ( req, res  ) => {
      * todo: this might be attack by malicious
      * need to confirm the str is not harmful before eval it.
      */
-    const str = JSON.stringify(eval("(" + req.query.raw_tx + ")"));
-    const raw_tx: RawTransaction = JSON.parse(str);
+    //const str = JSON.stringify(eval("(" + req.query.raw_tx + ")"));
+    const raw_tx: RawTransaction = JSON.parse(''+req.query.raw_tx);
     //const witnessArgs: WitnessArgs[] = JSON.parse(''+req.query.witnessArgs);
     const witnesses: string[] = JSON.parse(''+req.query.witnessArgs);
     
