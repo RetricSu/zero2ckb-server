@@ -255,6 +255,17 @@ app.get("/get_block_by_tx_hash", async ( req, res ) => {
     }
 });
 
+app.get("/get_tx_by_hash", async ( req, res ) => {
+    const tx_hash: string = req.query.tx_hash?.toString() || '';
+    try {
+        const tx = await chain.getTransaction(tx_hash);
+        res.json({status:'ok', data: tx});
+    } catch (error) {
+        console.log(error);
+        res.json({status:'failed', data:'error:'+JSON.stringify(error)});
+    }
+});
+
 app.get("/get_minimal_cell_capacity", async ( req, res ) => {
     const cell: FormalCell = JSON.parse(''+req.query.cell);
     try {
@@ -278,6 +289,15 @@ app.get("/wallets", async ( req, res ) => {
 app.get("/wallet_by_id", async ( req, res ) => {
     const id = Number(req.params.id);
     res.json(chain.getWalletById(id));
+});
+
+app.get("/read_contract", async ( req, res ) => {
+    const fname: string = req.query.f?.toString() || '';
+    try {
+        res.json(builder.readContractCodeByFileName(fname));
+    } catch (error) {
+        res.json({status:'failed', err: error});
+    }
 });
 
 app.listen( PORT, () => {

@@ -462,8 +462,25 @@ export class Builder {
     }
   }
 
+  generateScriptHash(script: Script){
+    const serialized_script = core.SerializeScript(normalizers.NormalizeScript(script));
+    console.log(serialized_script)
+    const hasher = new CKBHasher();
+    hasher.update(serialized_script);
+    return hasher.digestHex();
+  }
+
   generateTestContractCode(){ // carrot example
     const file = path.resolve(Const.TEST_CONTRACT);
+    const complied_code = fs.readFileSync(file);
+    return {
+      length: complied_code.byteLength,
+      code: '0x' + complied_code.toString('hex')
+    };
+  }
+
+  readContractCodeByFileName(filename: string){
+    const file = path.resolve( Const.CONTRACT_CODE_PREFIX_PATH + filename);
     const complied_code = fs.readFileSync(file);
     return {
       length: complied_code.byteLength,

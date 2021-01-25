@@ -11,7 +11,8 @@
     "index": "tsc && node dist/index.js",
     "typeid": "tsc && node dist/test/typeid_test.js",
     "server": "concurrently \"tsc -w\" \"nodemon dist/test/server.js\"",
-    "deploy": "node dist/test/server.js"
+    "deploy": "node dist/test/server.js",
+    "test_nervos_dao": "yarn build && node dist/test/test_dao_ownership.js"
   },
   "license": "MIT",
   "dependencies": {

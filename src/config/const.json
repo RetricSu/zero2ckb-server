@@ -22,9 +22,10 @@
         "outputs_data": [],
         "witnesses": []
     },
-    "TEST_CONTRACT": "../NERVOS-DAO/src/script-examples/carrot",
-    "TEST_UPGRADABLE_CONTRACT": "../NERVOS-DAO/src/script-examples/parrot",
-    "TYPE_ID_CONTRACT": "../NERVOS-DAO/src/script-examples/type_id",
+    "CONTRACT_CODE_PREFIX_PATH": "../server/src/script-examples/",
+    "TEST_CONTRACT": "../server/src/script-examples/carrot",
+    "TEST_UPGRADABLE_CONTRACT": "../server/src/script-examples/parrot",
+    "TYPE_ID_CONTRACT": "../server/src/script-examples/type_id",
     "RPC_URL": "http://127.0.0.1:8114",
     "DB_URL": "/tmp/indexed-data",
     "SERVER_PORT": {
@@ -37,5 +38,5 @@
         "https://www.asdfvaswe23.xyz",
         "https://zero2ckb.ckbapp.dev"
     ],
-    "mode": "production"
+    "mode": "development"
 }
