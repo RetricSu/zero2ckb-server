@@ -154,6 +154,15 @@ app.get("/get_seriliazed_witness", async ( req, res  ) => {
     }
 });
 
+app.get("/get_serialize_tx", async ( req, res  ) => {
+    const raw_tx = JSON.parse(''+req.query.raw_tx);
+    try {
+        const serialize_tx = builder.generateSerializeTx(raw_tx);
+        res.json({status:'ok', data: serialize_tx});
+    } catch (error) {
+        res.json({status:'failed', data: error.message});
+    }
+});
 
 app.get("/get_tx_hash", async ( req, res  ) => {
     /***  

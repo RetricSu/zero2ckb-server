@@ -613,6 +613,10 @@ export class Builder {
     // }
   }
 
+  generateSerializeTx(raw_tx: RawTransaction): HexString {
+    return new Reader(core.SerializeRawTransaction(normalizers.NormalizeRawTransaction(raw_tx))).serializeJson();
+  }
+
   signMessage(msg: HexString, account_id:number=0): HexString {
     //const keystore = Keystore.load(user.account.keystore);
     const file = path.resolve(User.account[account_id].keystore);
