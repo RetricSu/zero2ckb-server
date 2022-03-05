@@ -695,6 +695,7 @@ export class Builder {
 
       // 3. generate the sign-message, ready to be signed.
       const sig_hash = this.hasher.digestHex();
+      console.log("sig_hash", sig_hash);
       messages.push({
         index: i,
         message: sig_hash, // hex string

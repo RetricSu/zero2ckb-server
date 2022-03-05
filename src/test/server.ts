@@ -30,6 +30,8 @@ const app = express();
 app.use(cors(corsOptions));
 app.use('/static', express.static(path.join(__dirname, '../../src/script-examples')))
 
+console.log("corsOptions: ", corsOptions);
+
 const chain = new Chain();
 const builder = new Builder();
 
@@ -164,6 +166,8 @@ app.get("/get_serialize_tx", async ( req, res  ) => {
     }
 });
 
+
+
 app.get("/get_tx_hash", async ( req, res  ) => {
     /***  
      * todo: this might be attack by malicious
@@ -192,30 +196,24 @@ app.get("/get_signature", async ( req, res  ) => {
 });
 
 app.get("/get_sign_message", async ( req, res  ) => {
-    /***  
-     * todo: this might be attack by malicious
-     * need to confirm the str is not harmful before eval it.
-     */
-    //const str = JSON.stringify(eval("(" + req.query.raw_tx + ")"));
-    const raw_tx: RawTransaction = JSON.parse(''+req.query.raw_tx);
-    //const witnessArgs: WitnessArgs[] = JSON.parse(''+req.query.witnessArgs);
-    const witnesses: string[] = JSON.parse(''+req.query.witnessArgs);
-    
-    const outpoints = raw_tx.inputs.map(input => input.previous_output);
-    var input_cells: Cell[] = [];
-
     try {
+        const raw_tx: RawTransaction = JSON.parse(''+req.query.raw_tx);
+        console.log("get sign message for raw_tx", raw_tx);
+        const witnesses: string[] = JSON.parse(''+req.query.witnessArgs);
+        const outpoints = raw_tx.inputs.map(input => input.previous_output);
+        var input_cells: Cell[] = [];
         input_cells = await chain.getInputCellsByOutpoints(outpoints);
+        console.log(outpoints, input_cells);
         try {
             const tx_hash = builder.generateTxHash(raw_tx);
             const messages = builder.toMessage(tx_hash, raw_tx, witnesses, input_cells);
             res.json({status:'ok', data: messages});
         } catch (error) {
-            console.log(error);
+            console.log(error.message);
             res.json({status:'failed', data: error.message});
         }
     } catch (error) {
-        console.log(error);
+        console.log(error.message);
         res.json({status:'failed', data: error.message});
     }
 });

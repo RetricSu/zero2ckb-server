@@ -61,6 +61,7 @@ export class Chain {
 
         const get_live_cell = async (num: number): Promise<Cell | undefined> => {
             const data = await this.rpc.get_live_cell(outpoints[num], true);
+            console.log('rpc.get_live_cell, repsonse, outpoint', data, outpoints[num]);
             if(data.status === "live"){
                 let c: Cell = {...data.cell.output, ...{data: data.cell.data.content}};
                 return c;

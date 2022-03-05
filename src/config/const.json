@@ -36,7 +36,8 @@
         "http://localhost:3000",
         "https://asdfvaswe23.xyz",
         "https://www.asdfvaswe23.xyz",
-        "https://zero2ckb.ckbapp.dev"
+        "https://zero2ckb.ckbapp.dev",
+	"https://xying21.github.io"
     ],
     "mode": "production"
 }
