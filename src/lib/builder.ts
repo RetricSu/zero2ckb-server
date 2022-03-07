@@ -42,7 +42,7 @@
  */
 import path from "path";
 import fs from "fs";
-import * as chainConfig from "../config/dev_cofig.json";
+import * as chainConfig from "../config/lumos-config.json";
 import * as Const from "../config/const.json";
 import * as User from "../config/user.json";
 import { RPC, validators, normalizers, transformers, Reader } from "ckb-js-toolkit";

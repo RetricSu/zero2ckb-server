@@ -1,5 +1,5 @@
 import { MultisigScript, Cell, Builder } from "../lib/builder";
-import * as Config from "../config/dev_cofig.json";
+import * as Config from "../config/lumos-config.json";
 import * as Const from "../config/const.json";
 import {
   core,

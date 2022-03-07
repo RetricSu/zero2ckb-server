@@ -1,5 +1,5 @@
 import { MultisigScript, Cell, Builder } from "../lib/builder";
-import * as chainConfig from "../config/dev_cofig.json";
+import * as chainConfig from "../config/lumos-config.json";
 import {
   core,
   utils,

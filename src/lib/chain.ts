@@ -7,7 +7,7 @@ import type {
 import type { Cell as SimpleCell } from '../lib/builder';
 import User from "../config/user.json";
 import Const from "../config/const.json";
-import Config from "../config/dev_cofig.json";
+import Config from "../config/lumos-config.json";
 import { RPC } from "ckb-js-toolkit";
 import utils from './utils';
 import { get_env_mode } from './helper';
