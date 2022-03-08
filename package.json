@@ -4,6 +4,7 @@
   "version": "0.1.0",
   "author": "retricsu <inneverland2013@gmail.com>",
   "scripts": {
+    "fmt": "prettier --write tsconfig.json test/*.ts src/**/*.{ts,json} package.json",
     "build": "tsc",
     "start": "concurrently \"tsc -w\" \"nodemon dist/server.js\"",
     "serve": "node dist/server.js"
@@ -27,6 +28,7 @@
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
     "nodemon": "^2.0.6",
+    "prettier": "^2.5.1",
     "ts-node": "^9.0.0",
     "typescript": "^4.1"
   }

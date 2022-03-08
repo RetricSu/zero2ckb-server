@@ -1,19 +1,14 @@
-import { MultisigScript, Cell, Builder } from "../src/lib/builder";
-import * as chainConfig from "../src/config/lumos-config.json";
+import { MultisigScript, Cell, Builder } from "../lib/builder";
+import chainConfig from "../config/lumos-config.json";
 import {
-  core,
-  utils,
-  HashType,
   Script,
-  WitnessArgs,
-  OutPoint,
-  HexString,
-  Transaction,
   RawTransaction,
 } from "@ckb-lumos/base";
-import { get_env_mode } from '../src/lib/helper';
-const Config = get_env_mode() === "development" ? chainConfig.development : chainConfig.production;
-
+import { envConfig } from "../lib/env-config";
+const config =
+  envConfig.mode === "development"
+    ? chainConfig.development
+    : chainConfig.production;
 
 const builder = new Builder();
 
@@ -26,9 +21,9 @@ const multisigAddress = {
 };
 
 const multisigLock: Script = {
-  code_hash: Config.SCRIPTS.SECP256K1_BLAKE160_MULTISIG.CODE_HASH,
+  code_hash: config.SCRIPTS.SECP256K1_BLAKE160_MULTISIG.CODE_HASH,
   hash_type:
-    Config.SCRIPTS.SECP256K1_BLAKE160_MULTISIG.HASH_TYPE == "type"
+    config.SCRIPTS.SECP256K1_BLAKE160_MULTISIG.HASH_TYPE == "type"
       ? "type"
       : "data",
   args: multisigAddress["lock-arg"],
@@ -154,37 +149,45 @@ async function test() {
         },
       },
     ],
-    outputs_data: ["0x"]
+    outputs_data: ["0x"],
   };
   const multisigScript: MultisigScript = {
-      S: 0,
-      R: 1,
-      M: 2,
-      N: 3,
-      publicKeyHashes: get_public_key_hash()
+    S: 0,
+    R: 1,
+    M: 2,
+    N: 3,
+    publicKeyHashes: get_public_key_hash(),
   };
   const witnessArgs = [
     {
       lock: "0x",
     },
   ];
-  const inputcells: Cell[] = [{
-      capacity: '0x174876e800',
+  const inputcells: Cell[] = [
+    {
+      capacity: "0x174876e800",
       lock: {
-          code_hash: '0x5c5069eb0857efc65e1bca0c07df34c31663b3622fd3876c876320fc9634e2a8',
-          hash_type: 'type',
-          args: '0x9aa78d1ced9e5cd997c596e8a9877e32097c621f'
-          
+        code_hash:
+          "0x5c5069eb0857efc65e1bca0c07df34c31663b3622fd3876c876320fc9634e2a8",
+        hash_type: "type",
+        args: "0x9aa78d1ced9e5cd997c596e8a9877e32097c621f",
       },
-      data: '0x',
+      data: "0x",
       out_point: {
         tx_hash:
           "0xff0333df08cc41a1c1d6a749583b35ce3bb6c2865f56f3996e6fc9a2aec6ccc5",
         index: "0x0",
-      }
-  }]
+      },
+    },
+  ];
   const account_ids = [0, 2];
-  const tx = builder.sign_Multisig(raw_tx, multisigScript, witnessArgs, inputcells, account_ids);
+  const tx = builder.sign_Multisig(
+    raw_tx,
+    multisigScript,
+    witnessArgs,
+    inputcells,
+    account_ids
+  );
   console.log(JSON.stringify(tx));
   const txhash = await builder.send_tx(tx);
   console.log(txhash);
