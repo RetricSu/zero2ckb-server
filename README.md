@@ -8,3 +8,10 @@ MODE=<mode "production" or "development", optional, default development, will ef
 PORT=<server port, optional, default 3000>
 EOF
 ```
+
+run
+
+```sh
+npm run build
+npm run serve
+```
