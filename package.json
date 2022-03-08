@@ -1,18 +1,13 @@
 {
-  "name": "learn-ckb-by-hand",
-  "description": "a helper file in browser to learn ckb purely by hand.",
-  "version": "1.0.0",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "name": "zero2ckb-server",
+  "description": "learn ckb from 0 api-server",
+  "version": "0.1.0",
+  "author": "retricsu <inneverland2013@gmail.com>",
   "scripts": {
-    "dev": "nodemon --watch 'src/*.ts' --exec 'ts-node' src/*.ts",
+    "fmt": "prettier --write tsconfig.json test/*.ts src/**/*.{ts,json} package.json",
     "build": "tsc",
-    "start": "node dist/index.js",
-    "index": "tsc && node dist/index.js",
-    "typeid": "tsc && node dist/test/typeid_test.js",
-    "server": "concurrently \"tsc -w\" \"nodemon dist/test/server.js\"",
-    "deploy": "node dist/test/server.js",
-    "test_nervos_dao": "yarn build && node dist/test/test_dao_ownership.js"
+    "start": "concurrently \"tsc -w\" \"nodemon dist/server.js\"",
+    "serve": "node dist/server.js"
   },
   "license": "MIT",
   "dependencies": {
@@ -33,7 +28,8 @@
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
     "nodemon": "^2.0.6",
+    "prettier": "^2.5.1",
     "ts-node": "^9.0.0",
-    "typescript": "^4.0.5"
+    "typescript": "^4.1"
   }
 }
