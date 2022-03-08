@@ -9,7 +9,7 @@ PORT=<server port, optional, default 3000>
 EOF
 ```
 
-run
+require: `node 14`
 
 ```sh
 npm run build
