@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "author": "retricsu <inneverland2013@gmail.com>",
   "scripts": {
-    "fmt": "prettier --write tsconfig.json test/*.ts src/**/*.{ts,json} package.json",
+    "fmt": "prettier --write tsconfig.json src/**/*.{ts,json} package.json",
     "build": "tsc",
     "start": "concurrently \"tsc -w\" \"nodemon dist/server.js\"",
     "serve": "node dist/server.js"
