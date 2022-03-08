@@ -1,5 +1,5 @@
-import { MultisigScript, Cell, Builder } from "../lib/builder";
-import * as chainConfig from "../config/lumos-config.json";
+import { MultisigScript, Cell, Builder } from "../src/lib/builder";
+import * as chainConfig from "../src/config/lumos-config.json";
 import {
   core,
   utils,
@@ -11,7 +11,7 @@ import {
   Transaction,
   RawTransaction,
 } from "@ckb-lumos/base";
-import { get_env_mode } from '../lib/helper';
+import { get_env_mode } from '../src/lib/helper';
 const Config = get_env_mode() === "development" ? chainConfig.development : chainConfig.production;
 
 

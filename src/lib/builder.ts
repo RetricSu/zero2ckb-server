@@ -1,12 +1,7 @@
 /**
- * 
-    _    ____ ____ ____ _  _    ____ _  _ ___     ___  _   _    _  _ ____ _  _ ___  
-    |    |___ |__| |__/ |\ |    |    |_/  |__]    |__]  \_/     |__| |__| |\ | |  \ 
-    |___ |___ |  | |  \ | \|    |___ | \_ |__]    |__]   |      |  | |  | | \| |__/ 
- * 
- * The popurse of this code is to help developers gain a better understanding
+ * The purpose of this code is to help developers gain a better understanding
  * about how CKB works by allowing them construct a raw transaction purely by their
- * hands and then serializes the tx and uplpad to blockchain. To learn more about the 
+ * hands and then serializes the tx and upload to blockchain. To learn more about the 
  * whole life cycle of how Transaction got processed in CKB, compares to Bitcoin and 
  * Ethereum, don't forget to check out the following links.
  * 
@@ -14,38 +9,18 @@
  * - https://github.com/nervosnetwork/ckb-system-scripts/wiki/How-to-sign-transaction
  * - https://docs.ckb.dev/docs/rfcs/0022-transaction-structure/0022-transaction-structure#transaction-hash
  * 
- * ## pre-reqiured
+ * ## pre-required
  * 
  * - generate a couple brand new wallet accounts using the command tool ckb-cli
  * - run a CKB devnet on local.
  * - pass the wallets info to /src/user.json. (including password, so !!!do NOT use this wallet in production!!!)
- * 
- * ## useage example 
- *      
-        import { Builder } from "./builder";
-
-        // construct the following args 
-        // purely by your hand and your mind.
-
-        const raw_tx: RawTransaction;
-        const witness_args: WitnessArgs[];
-        const input_cells: Cell[];
-
-        // pass the three args above to builder 
-        // to generate a real transaction
-        // and even to send it out to blockchain!(by RPC)
-
-        const builder = new Builder();
-        const tx = builder.sign_P2PKH(raw_tx, witness_args, input_cells);
-        const txhash = await builder.send_tx(tx);
-        console.log(txhash);
  */
 import path from "path";
 import fs from "fs";
 import * as chainConfig from "../config/lumos-config.json";
 import * as Const from "../config/const.json";
 import * as User from "../config/user.json";
-import { RPC, validators, normalizers, transformers, Reader } from "ckb-js-toolkit";
+import { RPC, normalizers, Reader } from "ckb-js-toolkit";
 import {
   core,
   utils,
@@ -102,8 +77,8 @@ export type TypeIDConfig = {
 
 
 // todo
-// [ ]: improve the capacity caculation, repalce the current hard-code method
-// [ ]: improve the tx-fee estimate, repalce the current hard-code method
+// [ ]: improve the capacity calculation, replace the current hard-code method
+// [ ]: improve the tx-fee estimate, replace the current hard-code method
 // [ ]: extract the same interface and type to a single file for better code structure and code sharing
 export class Builder {
   private hasher;
@@ -261,13 +236,6 @@ export class Builder {
     }
     // 6. return the complete tx which can be uploaded on-chain directly through rpc.
     return { ...raw_tx, ...{ witnesses: signedWitness } };
-  }
-
-  sign_CustomTypeScript(
-    raw_tx: RawTransaction,
-    witnessArgs: WitnessArgs[]
-  ){
-    
   }
 
   deploy_contract(
@@ -458,7 +426,7 @@ export class Builder {
       hasher.update(code.data)
       return hasher.digestHex();
     }else{
-      throw new Error("unsuported type of code.");
+      throw new Error("unsupported type of code.");
     }
   }
 
@@ -580,18 +548,18 @@ export class Builder {
           core.SerializeScript(normalizers.NormalizeScript(cell.lock))
         ).serializeJson()
       );
-      const scripthash = this.hasher.digestHex();
+      const scriptHash = this.hasher.digestHex();
 
-      // find if the same scripthash group exits.
+      // find if the same script-hash group exits.
       // if exits, push the current inputcells's index into this group.
       // else, create a new group and push the first item.
-      const group = groups.find((g) => g.hash === scripthash);
+      const group = groups.find((g) => g.hash === scriptHash);
       if (group) {
-        const i = groups.findIndex((g) => g.hash === scripthash);
+        const i = groups.findIndex((g) => g.hash === scriptHash);
         groups[i].child.push(index);
       } else {
         groups.push({
-          hash: scripthash,
+          hash: scriptHash,
           child: [index],
         });
       }
@@ -604,13 +572,6 @@ export class Builder {
     return ckbHash(
       core.SerializeRawTransaction(normalizers.NormalizeRawTransaction(raw_tx))
     ).serializeJson();
-    // try {
-    //   return ckbHash(
-    //     core.SerializeRawTransaction(normalizers.NormalizeRawTransaction(raw_tx))
-    //   ).serializeJson();
-    // } catch (error) {
-    //   return error.message; 
-    // }
   }
 
   generateSerializeTx(raw_tx: RawTransaction): HexString {
@@ -618,7 +579,6 @@ export class Builder {
   }
 
   signMessage(msg: HexString, account_id:number=0): HexString {
-    //const keystore = Keystore.load(user.account.keystore);
     const file = path.resolve(User.account[account_id].keystore);
     const keystore = Keystore.load(file);
     const private_key = keystore.extendedPrivateKey(User.account[account_id].password)

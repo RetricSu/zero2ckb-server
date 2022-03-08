@@ -4,14 +4,13 @@ import type {
     OutPoint,
     Cell
 } from "@ckb-lumos/base";
-import type { Cell as SimpleCell } from '../lib/builder';
 import User from "../config/user.json";
 import Const from "../config/const.json";
 import Config from "../config/lumos-config.json";
 import { RPC } from "ckb-js-toolkit";
 import utils from './utils';
 import { get_env_mode } from './helper';
-const { minimalCellCapacity, generateAddress, parseAddress } = require("@ckb-lumos/helpers")
+import { minimalCellCapacity } from "@ckb-lumos/helpers";
 
 export class Chain {
     private indexer;
@@ -43,9 +42,9 @@ export class Chain {
 
     async queryTransaction(query: QueryOptions, _limit?: number){
         const limit = _limit || 10;
-        const txColletor = new TransactionCollector(this.indexer, query);
+        const txCollector = new TransactionCollector(this.indexer, query);
         const result = [];
-        for await(const cell of txColletor.collect()){
+        for await(const cell of txCollector.collect()){
             result.push(cell);
             if(result.length > limit){
                 break;
@@ -61,7 +60,7 @@ export class Chain {
 
         const get_live_cell = async (num: number): Promise<Cell | undefined> => {
             const data = await this.rpc.get_live_cell(outpoints[num], true);
-            console.log('rpc.get_live_cell, repsonse, outpoint', data, outpoints[num]);
+            console.log('rpc.get_live_cell, response, outpoint', data, outpoints[num]);
             if(data.status === "live"){
                 let c: Cell = {...data.cell.output, ...{data: data.cell.data.content}};
                 return c;
@@ -75,13 +74,6 @@ export class Chain {
             if(cell !== undefined)
                 cells.push(cell);
         }
-
-        // for(let i=0;i<outpoints.length;i++){
-        //     const data = await this.rpc.get_live_cell(outpoints[i], true);
-        //     if(data.status === "live")
-        //         cells.push({...data.cell.output, ...{data: data.cell.data.content}});
-        //     else continue;
-        // }
 
         return cells;
     }

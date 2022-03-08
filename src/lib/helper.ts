@@ -18,10 +18,6 @@ const buf2hex = function (buffer: ArrayBuffer) { // buffer is an ArrayBuffer
 }
 
 const get_env_mode = function(){
-    // check if we are in development or production
-    // if mode === 'development', code should run on local
-    // if mode === 'production', code should be deployed on server
-    // todo: maybe auto test using os === 'ubuntu' or something.
     return Const.mode;
 }
 
