@@ -9,7 +9,7 @@ import Const from "../config/const.json";
 import Config from "../config/lumos-config.json";
 import { RPC } from "ckb-js-toolkit";
 import utils from './utils';
-import { get_env_mode } from './helper';
+import { getMode } from './helper';
 import { minimalCellCapacity } from "@ckb-lumos/helpers";
 
 export class Chain {
@@ -118,7 +118,7 @@ export class Chain {
     }
 
     getChainConfig(){
-        return get_env_mode() === 'development' ? Config.development : Config.production;
+        return getMode() === 'development' ? Config.development : Config.production;
     }
 
     getWallets(){

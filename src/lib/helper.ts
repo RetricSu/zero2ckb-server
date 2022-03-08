@@ -1,4 +1,5 @@
-import * as Const from '../config/const.json';
+import dotenv from "dotenv";
+dotenv.config({ path: "./.env" });
 
 const serializeBigInt = function (i: number) {
     const view = new DataView(new ArrayBuffer(8));
@@ -17,13 +18,13 @@ const buf2hex = function (buffer: ArrayBuffer) { // buffer is an ArrayBuffer
     return Array.prototype.map.call(new Uint8Array(buffer), x => ('00' + x.toString(16)).slice(-2)).join('');
 }
 
-const get_env_mode = function(){
-    return Const.mode;
+const getMode = function(){
+    return process.env.MODE === "production" ? "production" : "development"; 
 }
 
 export {
     serializeBigInt,
     toBigUInt64LE,
     buf2hex,
-    get_env_mode,
+    getMode,
 }

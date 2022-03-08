@@ -17,9 +17,9 @@
  */
 import path from "path";
 import fs from "fs";
-import * as chainConfig from "../config/lumos-config.json";
-import * as Const from "../config/const.json";
-import * as User from "../config/user.json";
+import lumosConfig from "../config/lumos-config.json";
+import config from "../config/const.json";
+import User from "../config/user.json";
 import { RPC, normalizers, Reader } from "ckb-js-toolkit";
 import {
   core,
@@ -37,10 +37,10 @@ import {
 } from "@ckb-lumos/base";
 import { key, Keystore } from "@ckb-lumos/hd";
 import { serializeBigInt, toBigUInt64LE, buf2hex } from "./helper";
-import { get_env_mode } from './helper';
+import { getMode } from './helper';
 
 const { CKBHasher, ckbHash } = utils;
-const Config = get_env_mode() === 'development' ?  chainConfig.development : chainConfig.production;
+const chainConfig = getMode() === 'development' ?  lumosConfig.development : lumosConfig.production;
 
 export interface Message {
   index: number;
@@ -122,20 +122,20 @@ export class Builder {
       for (let j = 1; j < input_groups[i].child.length; j++) {
         const witness_index = input_groups[i].child[j];
         let witness_args_in_group = witnessArgs[witness_index];
-        const witeness_in_group = new Reader(
+        const witness_in_group = new Reader(
           this.serializeWitness(witness_args_in_group)
         );
-        this.hasher.update(serializeBigInt(witeness_in_group.length()));
-        this.hasher.update(witeness_in_group);
+        this.hasher.update(serializeBigInt(witness_in_group.length()));
+        this.hasher.update(witness_in_group);
       }
       // - 2.3 hash the witness which do not in any input group
       for (let k = raw_tx.inputs.length; k < witnessArgs.length; k++) {
         let witness_args_alone = witnessArgs[k];
-        const witeness_alone = new Reader(
+        const witness_alone = new Reader(
           this.serializeWitness(witness_args_alone)
         );
-        this.hasher.update(serializeBigInt(witeness_alone.length()));
-        this.hasher.update(witeness_alone);
+        this.hasher.update(serializeBigInt(witness_alone.length()));
+        this.hasher.update(witness_alone);
       }
 
       // 3. generate the sign-message, ready to be signed.
@@ -197,20 +197,20 @@ export class Builder {
       for (let j = 1; j < input_groups[i].child.length; j++) {
         const witness_index = input_groups[i].child[j];
         let witness_args_in_group = witnessArgs[witness_index];
-        const witeness_in_group = new Reader(
+        const witness_in_group = new Reader(
           this.serializeWitness(witness_args_in_group)
         );
-        this.hasher.update(serializeBigInt(witeness_in_group.length()));
-        this.hasher.update(witeness_in_group);
+        this.hasher.update(serializeBigInt(witness_in_group.length()));
+        this.hasher.update(witness_in_group);
       }
       // - 2.3 hash the witness which do not in any input group
       for (let k = raw_tx.inputs.length; k < witnessArgs.length; k++) {
         let witness_args_alone = witnessArgs[k];
-        const witeness_alone = new Reader(
+        const witness_alone = new Reader(
           this.serializeWitness(witness_args_alone)
         );
-        this.hasher.update(serializeBigInt(witeness_alone.length()));
-        this.hasher.update(witeness_alone);
+        this.hasher.update(serializeBigInt(witness_alone.length()));
+        this.hasher.update(witness_alone);
       }
 
       // 3. generate the sign-message, ready to be signed.
@@ -256,9 +256,9 @@ export class Builder {
       raw_tx_without_output.outputs[0] = {
         capacity: '0x' + (BigInt(length + 100) * 100000000n).toString(16),
         lock: {
-          code_hash: Const.BURNER_LOCK.code_hash,
-          args: Const.BURNER_LOCK.args,
-          hash_type: Const.BURNER_LOCK.hash_type === "type"?"type":"data"
+          code_hash: config.BURNER_LOCK.code_hash,
+          args: config.BURNER_LOCK.args,
+          hash_type: config.BURNER_LOCK.hash_type === "type"?"type":"data"
         }
       };
       raw_tx_without_output.outputs_data[0] = compiled_code;
@@ -268,9 +268,9 @@ export class Builder {
       raw_tx_without_output.outputs[0] = {
         capacity: '0x' + (BigInt(length + 100) * 100000000n).toString(16),
         lock: {
-          code_hash: Config.SCRIPTS.SECP256K1_BLAKE160.CODE_HASH,
+          code_hash: chainConfig.SCRIPTS.SECP256K1_BLAKE160.CODE_HASH,
           args: User.account[account_id].lock_arg,
-          hash_type: Config.SCRIPTS.SECP256K1_BLAKE160.HASH_TYPE == "type"?"type":"data"
+          hash_type: chainConfig.SCRIPTS.SECP256K1_BLAKE160.HASH_TYPE == "type"?"type":"data"
         }
       };
       raw_tx_without_output.outputs_data[0] = compiled_code;
@@ -283,9 +283,9 @@ export class Builder {
       raw_tx_without_output.outputs[1] = {
         capacity: '0x' + remain_balance.toString(16),
         lock: {
-          code_hash: Config.SCRIPTS.SECP256K1_BLAKE160.CODE_HASH,
+          code_hash: chainConfig.SCRIPTS.SECP256K1_BLAKE160.CODE_HASH,
           args: User.account[account_id].lock_arg,
-          hash_type: Config.SCRIPTS.SECP256K1_BLAKE160.HASH_TYPE == "type"?"type":"data"
+          hash_type: chainConfig.SCRIPTS.SECP256K1_BLAKE160.HASH_TYPE == "type"?"type":"data"
         }
       }
       raw_tx_without_output.outputs_data[1] = '0x';
@@ -332,9 +332,9 @@ export class Builder {
     raw_tx_without_output.outputs[0] = {
       capacity: '0x' + (BigInt(length + 300) * 100000000n).toString(16),
       lock: {
-        code_hash: Config.SCRIPTS.SECP256K1_BLAKE160.CODE_HASH,
+        code_hash: chainConfig.SCRIPTS.SECP256K1_BLAKE160.CODE_HASH,
         args: User.account[account_id].lock_arg,
-        hash_type: Config.SCRIPTS.SECP256K1_BLAKE160.HASH_TYPE === "type"?"type":"data"
+        hash_type: chainConfig.SCRIPTS.SECP256K1_BLAKE160.HASH_TYPE === "type"?"type":"data"
       },
       type: {
         code_hash: this.generateCodeHash(type_id.code),
@@ -352,9 +352,9 @@ export class Builder {
       raw_tx_without_output.outputs[1] = {
         capacity: '0x' + remain_balance.toString(16),
         lock: {
-          code_hash: Config.SCRIPTS.SECP256K1_BLAKE160.CODE_HASH,
+          code_hash: chainConfig.SCRIPTS.SECP256K1_BLAKE160.CODE_HASH,
           args: User.account[account_id].lock_arg,
-          hash_type: Config.SCRIPTS.SECP256K1_BLAKE160.HASH_TYPE == "type"?"type":"data"
+          hash_type: chainConfig.SCRIPTS.SECP256K1_BLAKE160.HASH_TYPE == "type"?"type":"data"
         }
       }
       raw_tx_without_output.outputs_data[1] = '0x';
@@ -383,7 +383,7 @@ export class Builder {
     inputs: Input[] = [],
     outputs: Output[] = [],
     outputs_data: HexString[] = [],
-    version: HexString = Const.TX_VERSION
+    version: HexString = config.TX_VERSION
   ){
     let raw_tx: RawTransaction = {
       cell_deps: cell_deps,
@@ -403,7 +403,7 @@ export class Builder {
     outputs: Output[] = [],
     outputs_data: HexString[] = [],
     witnesses: HexString[] = [],
-    version: HexString = Const.TX_VERSION
+    version: HexString = config.TX_VERSION
   ){
     let tx: Transaction = {
       cell_deps: cell_deps,
@@ -439,7 +439,7 @@ export class Builder {
   }
 
   generateTestContractCode(){ // carrot example
-    const file = path.resolve(Const.TEST_CONTRACT);
+    const file = path.resolve(config.TEST_CONTRACT);
     const complied_code = fs.readFileSync(file);
     return {
       length: complied_code.byteLength,
@@ -448,7 +448,7 @@ export class Builder {
   }
 
   readContractCodeByFileName(filename: string){
-    const file = path.resolve( Const.CONTRACT_CODE_PREFIX_PATH + filename);
+    const file = path.resolve( config.CONTRACT_CODE_PREFIX_PATH + filename);
     const complied_code = fs.readFileSync(file);
     return {
       length: complied_code.byteLength,
@@ -457,7 +457,7 @@ export class Builder {
   }
 
   generateTestUpgradableContractCode(){
-    const file = path.resolve(Const.TEST_UPGRADABLE_CONTRACT);
+    const file = path.resolve(config.TEST_UPGRADABLE_CONTRACT);
     const complied_code = fs.readFileSync(file);
     return {
       length: complied_code.byteLength,
@@ -466,7 +466,7 @@ export class Builder {
   }
 
   generateTypeIDContractCode(){
-    const file = path.resolve(Const.TYPE_ID_CONTRACT);
+    const file = path.resolve(config.TYPE_ID_CONTRACT);
     const complied_code = fs.readFileSync(file);
     return {
       length: complied_code.byteLength,
@@ -495,7 +495,7 @@ export class Builder {
   }
 
   // in demo, we try encode the whole input as args rather than its hash 
-  // for simplicity and convience to better teach the type-id idea to newbee.
+  // for simplicity and convince to better teach the type-id idea to newbee.
   // but in production, we really use generateTypeIDArgsHash() method.
   generateTypeIDArgs(
     first_input: Input,
@@ -503,7 +503,7 @@ export class Builder {
     return '0x'+buf2hex(core.SerializeCellInput(normalizers.NormalizeCellInput(first_input)));
   }
 
-  // the multisigArgs acuttally is the lock_arg of the multisig address.
+  // the multisigArgs actually is the lock_arg of the multisig address.
   // the method to generate multisigArgs is quite simple: 
   //    1. serialize the multisigScript, and get first 20th-blake2b-hash
   //    2. if since is not null, just append it after.
@@ -591,7 +591,7 @@ export class Builder {
   }
 
   async send_tx(tx: Transaction): Promise<HexString>{
-    const rpc = new RPC(Const.RPC_URL);
+    const rpc = new RPC(config.RPC_URL);
     const real_txHash = await rpc.send_transaction(tx);
     return real_txHash;
   }
@@ -642,15 +642,15 @@ export class Builder {
       // - 2.2 hash the rest of witness in the same group
       for (let j = 1; j < input_groups[i].child.length; j++) {
         const witness_index = input_groups[i].child[j];
-        const witeness_in_group = new Reader(witnesses[witness_index] ? witnesses[witness_index] : '0x');
-        this.hasher.update(serializeBigInt(witeness_in_group.length()));
-        this.hasher.update(witeness_in_group);
+        const witness_in_group = new Reader(witnesses[witness_index] ? witnesses[witness_index] : '0x');
+        this.hasher.update(serializeBigInt(witness_in_group.length()));
+        this.hasher.update(witness_in_group);
       }
       // - 2.3 hash the witness which do not in any input group
       for (let k = raw_tx.inputs.length; k < witnesses.length; k++) {
-        const witeness_alone = new Reader(witnesses[k] ? witnesses[k] : '0x');
-        this.hasher.update(serializeBigInt(witeness_alone.length()));
-        this.hasher.update(witeness_alone);
+        const witness_alone = new Reader(witnesses[k] ? witnesses[k] : '0x');
+        this.hasher.update(serializeBigInt(witness_alone.length()));
+        this.hasher.update(witness_alone);
       }
 
       // 3. generate the sign-message, ready to be signed.

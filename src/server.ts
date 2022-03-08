@@ -13,18 +13,18 @@ import type{
 } from "./lib/builder";
 import { Builder } from "./lib/builder";
 import { Chain } from "./lib/chain";
-import * as Config from "./config/const.json";
-import { get_env_mode } from './lib/helper';
+import { envConfig } from "./lib/env-config";
+import config from "./config/const.json";
 import express from "express";
 import cors from "cors";
 
 const corsOptions = {
-    origin: Config.CROS_SERVER_LIST,
+    origin: config.CROS_SERVER_LIST,
     optionsSuccessStatus: 200, // some legacy browsers (IE11, various SmartTVs) choke on 204
     credentials: true
 }
 
-const PORT = get_env_mode() === 'development' ? Config.SERVER_PORT.development : Config.SERVER_PORT.production;
+const PORT = envConfig.port;
 
 const app = express();
 app.use(cors(corsOptions));
@@ -136,7 +136,7 @@ app.get("/deploy_upgradable_contract", async ( req, res ) => {
 });
 
 
-app.get("/get_seriliazed_witness", async ( req, res  ) => {
+app.get("/get_serialized_witness", async ( req, res  ) => {
     const witnessArgs: WitnessArgs = JSON.parse(''+req.query.witnessArgs);
     try {
         const witness = builder.serializeWitness(witnessArgs);
