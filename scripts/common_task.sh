@@ -1,11 +1,3 @@
-# below is some command script use in this project, including:
-#   - a generate-password script to help make the website under limited access through nginx in development mode.
-#   - a CKB dev-chain management script, to remove chain data and restart fresh at certain time.
-
-# generate-username-password script, use in nginx
-sudo sh -c "echo -n 'ckbee:' >> /etc/nginx/.webpasswd"
-sudo sh -c "openssl passwd -apr1 stayhumble >> /etc/nginx/.webpasswd"
-
 # CKB dev-chain management, use in crontab
 
 ## quick test: restart at every 1 min
