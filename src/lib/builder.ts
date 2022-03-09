@@ -35,9 +35,10 @@ import {
   Transaction,
   RawTransaction,
 } from "@ckb-lumos/base";
-import { key, Keystore } from "@ckb-lumos/hd";
+import { key } from "@ckb-lumos/hd";
 import { serializeBigInt, toBigUInt64LE, buf2hex } from "./helper";
 import { getMode } from "./helper";
+import { envConfig } from "./env-config";
 
 const { CKBHasher, ckbHash } = utils;
 const chainConfig =
@@ -664,7 +665,7 @@ export class Builder {
   }
 
   async send_tx(tx: Transaction): Promise<HexString> {
-    const rpc = new RPC(config.RPC_URL);
+    const rpc = new RPC(envConfig.ckbRpc);
     const real_txHash = await rpc.send_transaction(tx);
     return real_txHash;
   }

@@ -5,21 +5,21 @@ import {
 } from "@ckb-lumos/indexer";
 import type { QueryOptions, OutPoint, Cell } from "@ckb-lumos/base";
 import User from "../config/user.json";
-import Const from "../config/const.json";
-import Config from "../config/lumos-config.json";
+import chainConfig from "../config/lumos-config.json";
 import { RPC } from "ckb-js-toolkit";
 import utils from "./utils";
 import { getMode } from "./helper";
 import { minimalCellCapacity } from "@ckb-lumos/helpers";
+import { envConfig } from "./env-config";
 
 export class Chain {
   private indexer;
   private rpc;
 
   constructor() {
-    this.indexer = new Indexer(Const.RPC_URL, Const.DB_URL);
+    this.indexer = new Indexer(envConfig.ckbRpc, envConfig.indexerDbPath);
     this.indexer.startForever();
-    this.rpc = new RPC(Const.RPC_URL);
+    this.rpc = new RPC(envConfig.ckbRpc);
   }
 
   async queryCell(query: QueryOptions, _limit?: number) {
@@ -116,7 +116,9 @@ export class Chain {
   queryScript() {}
 
   getChainConfig() {
-    return getMode() === "development" ? Config.development : Config.production;
+    return getMode() === "development"
+      ? chainConfig.development
+      : chainConfig.production;
   }
 
   getWallets() {
