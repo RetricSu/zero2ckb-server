@@ -14,7 +14,10 @@ EOF
 require: 
 
 - `node 14`
-- ckb devnet: `ckb_v0.38.1`
+- ckb version: `ckb_v0.38.1`
+- init ckb devnet with the specific genesis message: "zfRgxIjdaTftx6aW7n"
+
+you can take `scripts/start-ckb.sh` for ref.
 
 run:
 

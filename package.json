@@ -7,7 +7,8 @@
     "fmt": "prettier --write tsconfig.json src/**/*.{ts,json} package.json",
     "build": "tsc",
     "start": "concurrently \"tsc -w\" \"nodemon dist/server.js\"",
-    "serve": "node dist/server.js"
+    "serve": "node dist/server.js",
+    "start-ckb": "./scripts/start-ckb.sh"
   },
   "license": "MIT",
   "dependencies": {
