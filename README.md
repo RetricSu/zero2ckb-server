@@ -24,3 +24,7 @@ run:
 yarn build
 yarn serve
 ```
+
+## prebuild images
+
+the repo's [github packages](https://github.com/RetricSu/zero2ckb-server/pkgs/container/zero2ckb-server-prebuilds) will deploy prebuild image. the entire project is copy into `/zero2ck-server` folder in the image, with `node_module` pre-installed and typescript code pre-compiled.
