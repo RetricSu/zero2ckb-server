@@ -149,7 +149,10 @@ export class Builder {
       });
 
       // 4. sign tx
-      const signature = this.signMessageByAccountId(sig_hash, (account_id = account_id));
+      const signature = this.signMessageByAccountId(
+        sig_hash,
+        (account_id = account_id)
+      );
 
       // 5. put the signature back to the first witness of the group.
       witness_args.lock = signature;
