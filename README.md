@@ -6,10 +6,17 @@ api-server of the website [zero2ckb](https://zero2ckb.ckbapp.dev/)
 $ cat > ./.env <<EOF
 MODE=<mode "production" or "development", optional, default development, will effect the chain scripts info in lumos-config.json>
 PORT=<server port, optional, default 3000>
+CKB_RPC=<ckb rpc url, optional, default http://localhost:8114>
+INDEXER_DB_PATH=<ckb-indexer database dir, optianl, default /indexed-db>
 EOF
 ```
 
-require: `node 14`
+require: 
+
+- `node 14`
+- ckb devnet: `ckb_v0.38.1`
+
+run:
 
 ```sh
 npm run build
