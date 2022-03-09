@@ -21,8 +21,4 @@ const buf2hex = function (buffer: ArrayBuffer) {
     .join("");
 };
 
-const getMode = function () {
-  return process.env.MODE === "production" ? "production" : "development";
-};
-
-export { serializeBigInt, toBigUInt64LE, buf2hex, getMode };
+export { serializeBigInt, toBigUInt64LE, buf2hex };

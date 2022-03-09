@@ -37,14 +37,9 @@ import {
 } from "@ckb-lumos/base";
 import { key } from "@ckb-lumos/hd";
 import { serializeBigInt, toBigUInt64LE, buf2hex } from "./helper";
-import { getMode } from "./helper";
 import { envConfig } from "./env-config";
 
 const { CKBHasher, ckbHash } = utils;
-const chainConfig =
-  getMode() === "development"
-    ? lumosConfig.development
-    : lumosConfig.production;
 
 export interface Message {
   index: number;
@@ -284,10 +279,10 @@ export class Builder {
       raw_tx_without_output.outputs[0] = {
         capacity: "0x" + (BigInt(length + 100) * 100000000n).toString(16),
         lock: {
-          code_hash: chainConfig.SCRIPTS.SECP256K1_BLAKE160.CODE_HASH,
+          code_hash: lumosConfig.SCRIPTS.SECP256K1_BLAKE160.CODE_HASH,
           args: User.account[account_id].lock_arg,
           hash_type:
-            chainConfig.SCRIPTS.SECP256K1_BLAKE160.HASH_TYPE == "type"
+            lumosConfig.SCRIPTS.SECP256K1_BLAKE160.HASH_TYPE == "type"
               ? "type"
               : "data",
         },
@@ -304,10 +299,10 @@ export class Builder {
       raw_tx_without_output.outputs[1] = {
         capacity: "0x" + remain_balance.toString(16),
         lock: {
-          code_hash: chainConfig.SCRIPTS.SECP256K1_BLAKE160.CODE_HASH,
+          code_hash: lumosConfig.SCRIPTS.SECP256K1_BLAKE160.CODE_HASH,
           args: User.account[account_id].lock_arg,
           hash_type:
-            chainConfig.SCRIPTS.SECP256K1_BLAKE160.HASH_TYPE == "type"
+            lumosConfig.SCRIPTS.SECP256K1_BLAKE160.HASH_TYPE == "type"
               ? "type"
               : "data",
         },
@@ -364,10 +359,10 @@ export class Builder {
     raw_tx_without_output.outputs[0] = {
       capacity: "0x" + (BigInt(length + 300) * 100000000n).toString(16),
       lock: {
-        code_hash: chainConfig.SCRIPTS.SECP256K1_BLAKE160.CODE_HASH,
+        code_hash: lumosConfig.SCRIPTS.SECP256K1_BLAKE160.CODE_HASH,
         args: User.account[account_id].lock_arg,
         hash_type:
-          chainConfig.SCRIPTS.SECP256K1_BLAKE160.HASH_TYPE === "type"
+          lumosConfig.SCRIPTS.SECP256K1_BLAKE160.HASH_TYPE === "type"
             ? "type"
             : "data",
       },
@@ -392,10 +387,10 @@ export class Builder {
       raw_tx_without_output.outputs[1] = {
         capacity: "0x" + remain_balance.toString(16),
         lock: {
-          code_hash: chainConfig.SCRIPTS.SECP256K1_BLAKE160.CODE_HASH,
+          code_hash: lumosConfig.SCRIPTS.SECP256K1_BLAKE160.CODE_HASH,
           args: User.account[account_id].lock_arg,
           hash_type:
-            chainConfig.SCRIPTS.SECP256K1_BLAKE160.HASH_TYPE == "type"
+            lumosConfig.SCRIPTS.SECP256K1_BLAKE160.HASH_TYPE == "type"
               ? "type"
               : "data",
         },

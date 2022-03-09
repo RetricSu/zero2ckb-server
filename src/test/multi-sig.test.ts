@@ -1,11 +1,6 @@
 import { MultisigScript, Cell, Builder } from "../lib/builder";
-import chainConfig from "../config/lumos-config.json";
+import lumosConfig from "../config/lumos-config.json";
 import { Script, RawTransaction } from "@ckb-lumos/base";
-import { envConfig } from "../lib/env-config";
-const config =
-  envConfig.mode === "development"
-    ? chainConfig.development
-    : chainConfig.production;
 
 const builder = new Builder();
 
@@ -18,9 +13,9 @@ const multisigAddress = {
 };
 
 const multisigLock: Script = {
-  code_hash: config.SCRIPTS.SECP256K1_BLAKE160_MULTISIG.CODE_HASH,
+  code_hash: lumosConfig.SCRIPTS.SECP256K1_BLAKE160_MULTISIG.CODE_HASH,
   hash_type:
-    config.SCRIPTS.SECP256K1_BLAKE160_MULTISIG.HASH_TYPE == "type"
+    lumosConfig.SCRIPTS.SECP256K1_BLAKE160_MULTISIG.HASH_TYPE == "type"
       ? "type"
       : "data",
   args: multisigAddress["lock-arg"],

@@ -21,14 +21,12 @@ const corsOptions = {
 };
 
 const PORT = envConfig.port;
-const MODE = envConfig.mode;
 
 const app = express();
 app.use(cors(corsOptions));
 app.use("/static", express.static(path.join(__dirname, "./contracts")));
 
 console.log("corsOptions: ", corsOptions);
-console.log("mode: ", MODE);
 
 const chain = new Chain();
 const builder = new Builder();
