@@ -8,7 +8,6 @@ import User from "../config/user.json";
 import chainConfig from "../config/lumos-config.json";
 import { RPC } from "ckb-js-toolkit";
 import utils from "./utils";
-import { getMode } from "./helper";
 import { minimalCellCapacity } from "@ckb-lumos/helpers";
 import { envConfig } from "./env-config";
 
@@ -116,9 +115,7 @@ export class Chain {
   queryScript() {}
 
   getChainConfig() {
-    return getMode() === "development"
-      ? chainConfig.development
-      : chainConfig.production;
+    return chainConfig;
   }
 
   getWallets() {
