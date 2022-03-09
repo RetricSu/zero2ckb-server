@@ -60,7 +60,7 @@ run(){
   setMinerArgInCkbToml
   setGenesisMessageInDevToml
   # start ckb node
-  $CKB -C node1 run
+  cd $DIR/$CKB_DOWNLOAD_FOLDER && $CKB -C node1 run
 }
 
 # start
