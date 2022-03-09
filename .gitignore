@@ -133,3 +133,4 @@ dist/
 indexed-data/
 .env
 .DS_Store
+ckb
