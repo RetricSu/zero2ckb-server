@@ -10,10 +10,6 @@
   "TEST_UPGRADABLE_CONTRACT": "../contracts/parrot",
   "TYPE_ID_CONTRACT": "../contracts/type_id",
   "CROS_SERVER_LIST": [
-    "http://localhost:3000",
-    "https://asdfvaswe23.xyz",
-    "https://www.asdfvaswe23.xyz",
-    "https://zero2ckb.ckbapp.dev",
-    "https://xying21.github.io"
+    "*"
   ]
 }
