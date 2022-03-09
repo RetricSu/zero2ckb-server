@@ -21,6 +21,6 @@ you can take `scripts/start-ckb.sh` for ref.
 run:
 
 ```sh
-npm run build
-npm run serve
+yarn build
+yarn serve
 ```
