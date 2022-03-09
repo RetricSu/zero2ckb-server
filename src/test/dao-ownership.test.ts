@@ -341,7 +341,7 @@ async function use_contract() {
   var input_cells: Cell[] = [];
   try {
     input_cells = await chain.getInputCellsByOutpoints(outpoints);
-    const signature = builder.signMessage(tx_hash, 0);
+    const signature = builder.signMessageByAccountId(tx_hash, 0);
     const witness = builder.serializeWitness({ lock: signature });
     console.log(witness);
     // 0x5500000010000000550000005500000041000000cbcb0e8a971424860563e5a7560567b6aaf446d2c3808edcdf870f6c7a825c711e79c67a3767571f728be866ae06d1b4451f83d8d52994f3da26b13bbb9e454000
@@ -355,7 +355,7 @@ async function use_contract() {
 function sign_msg() {
   const msg =
     "0xabd6f2deb58fb9da65d51fe80e2b6a793f199dad1c57483568e66ec5b384758e";
-  const signature = builder.signMessage(msg, 0);
+  const signature = builder.signMessageByAccountId(msg, 0);
   const witness = builder.serializeWitness({ lock: signature });
   console.log(witness);
   console.log((signature.length - 2) / 2);
