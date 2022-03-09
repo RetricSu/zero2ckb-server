@@ -149,7 +149,10 @@ export class Builder {
       });
 
       // 4. sign tx
-      const signature = this.signMessage(sig_hash, (account_id = account_id));
+      const signature = this.signMessageByAccountId(
+        sig_hash,
+        (account_id = account_id)
+      );
 
       // 5. put the signature back to the first witness of the group.
       witness_args.lock = signature;
@@ -228,7 +231,7 @@ export class Builder {
 
       // 4. sign tx with each account
       for (let l = 0; l < account_ids.length; l++) {
-        const signature = this.signMessage(sig_hash, account_ids[l]);
+        const signature = this.signMessageByAccountId(sig_hash, account_ids[l]);
 
         // 5. put the signature back to the first witness of the group.
         const sig_offset = serializedMultisigScript.length + l * 130;
@@ -651,12 +654,8 @@ export class Builder {
     ).serializeJson();
   }
 
-  signMessage(msg: HexString, account_id: number = 0): HexString {
-    const file = path.resolve(User.account[account_id].keystore);
-    const keystore = Keystore.load(file);
-    const private_key = keystore.extendedPrivateKey(
-      User.account[account_id].password
-    ).privateKey;
+  signMessageByAccountId(msg: HexString, account_id: number = 0): HexString {
+    const private_key = User.account[account_id].private_key;
     return key.signRecoverable(msg, private_key);
   }
 
