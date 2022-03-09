@@ -7,4 +7,4 @@ RUN npm install pm2 -g
 
 RUN echo "Finished installing dependencies"
 
-EXPOSE 3000
+EXPOSE 3000 8114 8115

@@ -15,7 +15,7 @@ import express from "express";
 import cors from "cors";
 
 const corsOptions = {
-  origin: config.CROS_SERVER_LIST,
+  origin: config.CORS_SERVER_LIST.length > 0 ? config.CORS_SERVER_LIST : "*",
   optionsSuccessStatus: 200, // some legacy browsers (IE11, various SmartTVs) choke on 204
   credentials: true,
 };
