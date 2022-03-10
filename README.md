@@ -13,8 +13,10 @@ EOF
 require: 
 
 - `node 14`
-- ckb version: `ckb_v0.38.1`
-- init ckb devnet with the specific genesis message: "zfRgxIjdaTftx6aW7n"
+- run a specific ckb devnet on your local environment:
+  - ckb version: `ckb_v0.38.1`
+  - genesis message: `zfRgxIjdaTftx6aW7n`
+  - [block assembler's args](https://github.com/RetricSu/zero2ckb-server/blob/develop/scripts/start-ckb.sh#L20-L35): `0x43d509d97f26007a285f39241cffcd411157196c`
 
 you can take `scripts/start-ckb.sh` for ref.
 
