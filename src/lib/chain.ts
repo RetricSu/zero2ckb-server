@@ -83,10 +83,16 @@ export class Chain {
 
   async getNewBlocks(limit: number) {
     const height = await this.rpc.get_tip_block_number();
+    if (BigInt(height) < BigInt(limit)) {
+      limit = +BigInt(height).toString(10);
+    }
+    console.log(`try to get new blocks, limit: ${limit}`);
     const blocks: Array<any> = [];
 
     const fetch = async (num: number) => {
-      const block_number = "0x" + (BigInt(height) - BigInt(num)).toString(16);
+      const startBlockNumber =
+        BigInt(height) - BigInt(num) > 0 ? BigInt(height) - BigInt(num) : 0n;
+      const block_number = "0x" + startBlockNumber.toString(16);
       const block = await this.rpc.get_block_by_number(block_number);
       return block;
     };
