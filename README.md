@@ -2,15 +2,7 @@
 
 api-server of the website [zero2ckb](https://zero2ckb.ckbapp.dev/)
 
-```sh
-$ cat > ./.env <<EOF
-PORT=<server port, optional, default 3000>
-CKB_RPC=<ckb rpc url, optional, default http://localhost:8114>
-INDEXER_DB_PATH=<ckb-indexer database dir, optianl, default /indexed-db>
-EOF
-```
-
-require: 
+require:
 
 - `node 14`
 - run a specific ckb devnet on your local environment:
@@ -19,6 +11,16 @@ require:
   - [block assembler's args](https://github.com/RetricSu/zero2ckb-server/blob/develop/scripts/start-ckb.sh#L20-L35): `0x43d509d97f26007a285f39241cffcd411157196c`
 
 you can take `scripts/start-ckb.sh` for ref.
+
+create an .env file under root dir:
+
+```sh
+$ cat > ./.env <<EOF
+PORT=<server port, optional, default 3000>
+CKB_RPC=<ckb rpc url, optional, default http://localhost:8114>
+INDEXER_DB_PATH=<ckb-indexer database dir, optional, default ./indexed-db>
+EOF
+```
 
 run:
 
@@ -30,3 +32,5 @@ yarn serve
 ## prebuild images
 
 the repo's [github packages](https://github.com/RetricSu/zero2ckb-server/pkgs/container/zero2ckb-server-prebuilds) will deploy prebuild image. the entire project is copy into `/zero2ck-server` folder in the image, with `node_module` pre-installed and typescript code pre-compiled.
+
+the default lumos ckb indexer database is located in `/zero2ckb-server/indexed-db`, if you are try cleaning the devnet chain data, you should clean `indexed-db` folder as well.

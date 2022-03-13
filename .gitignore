@@ -130,7 +130,7 @@ dist
 .pnp.*
 
 dist/
-indexed-data/
+indexed-db/
 .env
 **/.DS_Store
 ckb
