@@ -49,10 +49,20 @@ export const setUrlTargetMethod = async (
     req: any,
     res: { send: (arg0: { status: string; data?: any; error?: any }) => void }
   ) => {
+    logger.info(
+      `[http-server] /${target}, query: ${JSON.stringify(
+        req.query,
+        null,
+        0
+      ).replace(/\\/g, "")}, params: ${JSON.stringify(
+        req.params,
+        null,
+        0
+      ).replace(/\\/g, "")}\n`
+    );
     try {
       const return_data = await method(req, res);
       res.send({ status: "ok", data: return_data });
-      //res.send(return_data); // just render
     } catch (error: any) {
       logger.error(error);
       res.send({ status: "failed", error: error.message });
@@ -113,6 +123,7 @@ export const setUpRouters = async (
         throw new Error(`un-supported HttpProtocolMethod, ${httpType}`);
     }
   }
+  logger.info("---");
 };
 
 export const toDynamicRouter = (url: string): DynamicRouterCheckResult => {
