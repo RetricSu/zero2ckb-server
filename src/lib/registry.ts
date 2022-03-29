@@ -163,13 +163,26 @@ export class MainRegistry extends Service {
 
   async get_sign_message() {
     const req = this.req;
-    const raw_tx: RawTransaction = JSON.parse("" + req.query.raw_tx);
+    const raw_tx: RawTransaction = JSON.parse(req.query.raw_tx);
     console.log("get sign message for raw_tx", raw_tx);
-    const witnesses: string[] = JSON.parse("" + req.query.witnessArgs);
+    const witnesses: string[] = JSON.parse(req.query.witnessArgs);
     const outpoints = raw_tx.inputs.map((input) => input.previous_output);
     var input_cells: Cell[] = [];
     input_cells = await chain.getInputCellsByOutpoints(outpoints);
-    console.log(outpoints, input_cells);
+    console.log("outpoints: ", outpoints, "input_cells: ", input_cells);
+    if (input_cells.length === 0) {
+      throw new Error(
+        `no alive cells found from OutPoints: ${JSON.stringify(
+          outpoints,
+          null,
+          0
+        ).replace(
+          /\\/g,
+          ""
+        )}. Please try refreshing live cells and constructing transaction using new cells.`
+      );
+    }
+
     const tx_hash = builder.generateTxHash(raw_tx);
     const messages = builder.toMessage(tx_hash, raw_tx, witnesses, input_cells);
     return messages;
