@@ -6,9 +6,10 @@
   "scripts": {
     "fmt": "prettier --write tsconfig.json src/**/*.{ts,json} package.json",
     "build": "tsc",
-    "start": "concurrently \"tsc -w\" \"nodemon dist/server.js\"",
+    "start": "ts-node-dev src/server.ts",
     "serve": "node dist/server.js",
-    "start-ckb": "./scripts/start-ckb.sh"
+    "start-ckb": "./scripts/start-ckb.sh",
+    "clean": "rm -rf ckb dist indexed-db"
   },
   "license": "MIT",
   "dependencies": {
@@ -31,6 +32,7 @@
     "nodemon": "^2.0.6",
     "prettier": "^2.5.1",
     "ts-node": "^9.0.0",
+    "ts-node-dev": "^1.1.8",
     "typescript": "4.0.5"
   }
 }
